@@ -7,6 +7,9 @@
 - [Project home](https://ghost888.github.io/ChinaMetro/): 项目介绍、覆盖范围和数据限制。
 - [Source code](https://github.com/Ghost888/ChinaMetro): GitHub 仓库与构建脚本。
 
+## Shanghai calculator
+- [Shanghai Metro new fare calculator](https://ghost888.github.io/ChinaMetro/shanghai/): 2026-12-01 Shanghai fare/route/first-last train tool, standalone offline HTML.
+
 ## Facts
 - 37 cities/regions, 339 lines, 6,464 stations.
 - Fares are official OD matrix values; missing pairs show "暂无票价" rather than estimates.
