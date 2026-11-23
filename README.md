@@ -1,5 +1,13 @@
 # China Metro Offline · 中国地铁离线导航
 
+**在线访问：**
+- 全国版：https://ghost888.github.io/ChinaMetro/
+- 上海专项版：https://ghost888.github.io/ChinaMetro/shanghai/
+
+**GitHub 仓库：** https://github.com/Ghost888/ChinaMetro
+
+两个项目共用同一个 GitHub Pages 站点，首页均有醒目的“打开即用”入口。
+
 **一个 HTML 文件，就是一套中国城市地铁离线导航系统。**
 
 > 覆盖说明：当前版本内置 **37 个城市/地区**的完整可核实数据，不是“所有中国大陆城市”。未收录城市不生成占位线路、不伪造站点/时刻/票价；后续可按 `DATA_SOURCES.md` 的流程继续扩展。
