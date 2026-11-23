@@ -748,30 +748,32 @@ function buildMap(c){
   var world=document.createElementNS("http://www.w3.org/2000/svg","g");
   world.setAttribute("id","world");
   var gTiles=document.createElementNS("http://www.w3.org/2000/svg","g"); gTiles.setAttribute("id","gTiles");
-  var gLines=document.createElementNS("http://www.w3.org/2000/svg","g");
+  var tilesWorld=document.createElementNS("http://www.w3.org/2000/svg","g"); tilesWorld.appendChild(gTiles);
+  var gScreen=document.createElementNS("http://www.w3.org/2000/svg","g"); gScreen.setAttribute("id","gScreenLines");
+  var vectorWorld=document.createElementNS("http://www.w3.org/2000/svg","g");
   var gRoute=document.createElementNS("http://www.w3.org/2000/svg","g"); gRoute.setAttribute("id","gRoute");
   var gSt=document.createElementNS("http://www.w3.org/2000/svg","g");
   var gLab=document.createElementNS("http://www.w3.org/2000/svg","g"); gLab.setAttribute("id","gLabels");
-  world.appendChild(gTiles); world.appendChild(gLines); world.appendChild(gRoute); world.appendChild(gSt); world.appendChild(gLab);
+  vectorWorld.appendChild(gRoute); vectorWorld.appendChild(gSt); vectorWorld.appendChild(gLab);
+  world.appendChild(tilesWorld); world.appendChild(gScreen); world.appendChild(vectorWorld);
   svg.innerHTML=""; svg.appendChild(world);
-  mapWorld=world; mapLayers={tiles:gTiles,lines:gLines,route:gRoute,stations:gSt,labels:gLab};
+  mapWorld=world; mapLayers={tiles:gTiles,tilesWorld:tilesWorld,vectorWorld:vectorWorld,lines:gScreen,route:gRoute,stations:gSt,labels:gLab};
   addTiles(c,proj,gTiles);
-  // one path per line (fewer SVG elements, avoids vector-effect rasterization gaps)
-  var seen=new Set(), linePaths={};
+  // line segments grouped per line; drawn in screen coordinates on every view change
+  var seen=new Set(), lineSegs={};
   for (var s=0;s<c.raw.segments.length;s++){
     var seg=c.raw.segments[s], a=seg[0], b=seg[1], li=c.stopLine[a];
     var key=li+":"+Math.min(a,b)+":"+Math.max(a,b);
     if (seen.has(key)) continue; seen.add(key);
-    var d=(linePaths[li]||(linePaths[li]=""))+"M"+proj.px[c.stopStation[a]]+" "+proj.py[c.stopStation[a]]+"L"+proj.px[c.stopStation[b]]+" "+proj.py[c.stopStation[b]];
-    linePaths[li]=d;
+    if(!lineSegs[li]) lineSegs[li]=[];
+    lineSegs[li].push([c.stopStation[a],c.stopStation[b]]);
   }
-  c.lineEls=[];
-  Object.keys(linePaths).forEach(function(k){
+  c.screenLineEls=[];
+  Object.keys(lineSegs).forEach(function(k){
     var li=Number(k), path=document.createElementNS("http://www.w3.org/2000/svg","path");
-    path.setAttribute("d",linePaths[k]); path.setAttribute("fill","none");
-    path.setAttribute("stroke",lineColor(c,li)); path.setAttribute("stroke-width","4");
-    path.setAttribute("stroke-linecap","round"); path.setAttribute("stroke-linejoin","round");
-    gLines.appendChild(path); c.lineEls.push({el:path,base:4});
+    path.setAttribute("fill","none"); path.setAttribute("stroke",lineColor(c,li));
+    path.setAttribute("stroke-width","4"); path.setAttribute("stroke-linecap","round"); path.setAttribute("stroke-linejoin","round");
+    gScreen.appendChild(path); c.screenLineEls.push({el:path,segs:lineSegs[k]});
   });
   // stations
   var inter=new Set();
@@ -807,7 +809,9 @@ function fitView(){
   applyView();
 }
 function setTransformOnly(){
-  if (mapWorld) mapWorld.setAttribute("transform","translate("+view.x+" "+view.y+") scale("+view.k+")");
+  var t="translate("+view.x+" "+view.y+") scale("+view.k+")";
+  if(mapLayers && mapLayers.tilesWorld) mapLayers.tilesWorld.setAttribute("transform",t);
+  if(mapLayers && mapLayers.vectorWorld) mapLayers.vectorWorld.setAttribute("transform",t);
 }
 function clampTileView(c){
   if(!c.raw.tiles && !c.raw.tileMosaic) return;
@@ -841,7 +845,20 @@ function applyView(){
   setTransformOnly();
   if (!state.city || !mapLayers) return;
   var c=state.city, k=view.k, base=view.baseK||k, zoom=k/base;
-  if(c.lineEls) for(var le=0;le<c.lineEls.length;le++) c.lineEls[le].el.setAttribute("stroke-width",String(c.lineEls[le].base/k));
+  if(c.screenLineEls){
+    var pp=projectCity(c);
+    for(var le=0;le<c.screenLineEls.length;le++){
+      var it=c.screenLineEls[le], d="";
+      for(var si=0;si<it.segs.length;si++){
+        var aa=it.segs[si][0], bb=it.segs[si][1];
+        var ax=view.x+pp.px[aa]*k, ay=view.y+pp.py[aa]*k;
+        var bx=view.x+pp.px[bb]*k, by=view.y+pp.py[bb]*k;
+        d += "M"+ax.toFixed(2)+" "+ay.toFixed(2)+"L"+bx.toFixed(2)+" "+by.toFixed(2);
+      }
+      it.el.setAttribute("d",d);
+      it.el.setAttribute("stroke-width","4");
+    }
+  }
   if(state.routeEls) for(var re=0;re<state.routeEls.length;re++) state.routeEls[re].el.setAttribute("stroke-width",String(state.routeEls[re].base/k));
   var rN = (zoom>=1.6 || c.raw.stations.length<=90) ? 2.2/k : 0;
   var rI = zoom>=1.6 ? 3.0/k : 2.6/k;
