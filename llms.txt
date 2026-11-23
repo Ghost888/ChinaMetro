@@ -1,0 +1,20 @@
+# China Metro Offline / 中国地铁离线导航
+
+> 37 个中国城市/地区的地铁离线导航，单文件 HTML，支持路线、官方 OD 票价、首末班、末班车校验和 OSM z10 离线底图。
+
+## Primary
+- [Web app](https://ghost888.github.io/ChinaMetro/ChinaMetro.html): 直接在浏览器打开的离线导航应用。
+- [Project home](https://ghost888.github.io/ChinaMetro/): 项目介绍、覆盖范围和数据限制。
+- [Source code](https://github.com/Ghost888/ChinaMetro): GitHub 仓库与构建脚本。
+
+## Facts
+- 37 cities/regions, 339 lines, 6,464 stations.
+- Fares are official OD matrix values; missing pairs show "暂无票价" rather than estimates.
+- First/last train data is station+direction+destination granularity, not a full timetable.
+- Basemap: OpenStreetMap z10 offline mosaic, © OpenStreetMap contributors, ODbL 1.0.
+- No network requests at runtime; `file://` works.
+
+## Limits
+- Not all Chinese cities are covered; missing cities are listed in the project page and are not fabricated.
+- OSM basemap is z10 only and blurs when zoomed in.
+- Firefox/iOS/Android device testing is not complete; Chromium and WebKit were tested.
