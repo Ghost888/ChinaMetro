@@ -29,7 +29,7 @@
 
 ![移动端](assets/screenshot-mobile.png)
 
-各模块显示测试的 10 张截图在 `display/`，逐项说明见 [DISPLAY_TESTS.md](DISPLAY_TESTS.md)。
+各模块显示测试的 14 张截图在 `display/`，逐项说明见 [DISPLAY_TESTS.md](DISPLAY_TESTS.md)。
 
 ## 快速开始
 
