@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f1ea">
+<meta name="description" content="中国地铁离线导航：内置全国城市地铁线路、站点、票价与首末班时刻，单个 HTML 文件即可离线使用。">
+<title>中国地铁 · 离线导航</title>
+<style>
+  :root{
+    --paper:#f4f1ea; --card:#fff; --ink:#191c22; --sub:#6f747d; --line:#e7e1d5;
+    --accent:#c8102e; --accent2:#1d4ed8; --green:#1a7f5a; --shadow:0 1px 2px rgba(30,25,15,.05),0 12px 34px -24px rgba(30,25,15,.55);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif}
+  body{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+  button,input,select{font-family:inherit}
+  button{cursor:pointer}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px 8px;flex:0 0 auto}
+  .brand{display:flex;align-items:center;gap:9px;min-width:0}
+  .logo{width:34px;height:34px;border-radius:11px;background:linear-gradient(145deg,#c8102e,#7a0b1c);color:#fff;
+    display:grid;place-items:center;font-weight:900;font-size:15px;letter-spacing:-.5px;box-shadow:0 4px 12px -8px #7a0b1c}
+  .brand b{display:block;font-size:15.5px;font-weight:800;letter-spacing:.2px;line-height:1.15}
+  .brand small{display:block;font-size:10.5px;color:var(--sub);margin-top:2px;letter-spacing:.3px;white-space:nowrap}
+  .top-actions{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+  .citybtn{all:unset;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);
+    border-radius:999px;padding:7px 11px;font-size:12.5px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .citybtn span{color:var(--sub);font-size:10px}
+  .iconbtn{all:unset;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#fff;
+    display:grid;place-items:center;font-size:15px;color:#444}
+  .layout{flex:1;min-height:0;display:flex;flex-direction:column}
+  .map-wrap{position:relative;flex:0 0 auto;height:42vh;min-height:260px;margin:0 10px;border-radius:18px;overflow:hidden;
+    background:linear-gradient(180deg,#fbf8f1,#f0ece2);border:1px solid var(--line);box-shadow:var(--shadow)}
+  svg#map{display:block;width:100%;height:100%;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+  svg#map.grabbing{cursor:grabbing}
+  #gTiles image{opacity:.56}
+  .mapctl button.on{background:#191c22;border-color:#191c22;color:#fff}
+  .osm-attr{position:absolute;left:9px;bottom:9px;z-index:2;font-size:9px;color:#6e737b;background:rgba(251,248,241,.82);padding:2px 6px;border-radius:4px;text-decoration:none;max-width:62%}
+  .osm-attr.off{opacity:.3}
+  .mapctl{position:absolute;right:9px;top:9px;display:flex;flex-direction:column;gap:6px;z-index:3}
+  .mapctl button{width:32px;height:32px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.94);
+    color:#333;font-size:17px;line-height:1;display:grid;place-items:center;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .mapctl button:active{transform:scale(.94)}
+  .maptag{position:absolute;left:9px;top:9px;z-index:2;background:rgba(255,255,255,.86);border:1px solid var(--line);
+    color:#4c515a;font-size:10.5px;padding:3px 8px;border-radius:999px;backdrop-filter:blur(4px)}
+  .hint{position:absolute;left:50%;bottom:9px;transform:translateX(-50%);z-index:3;background:rgba(25,28,34,.87);color:#fff;
+    font-size:11px;padding:6px 12px;border-radius:999px;white-space:nowrap;pointer-events:none;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+  .hoverTip{position:absolute;z-index:4;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:4px 8px;font-size:11.5px;box-shadow:0 4px 14px -8px rgba(0,0,0,.4);display:none;white-space:nowrap;max-width:70%;overflow:hidden;text-overflow:ellipsis}
+  .panel{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 10px 24px;display:flex;flex-direction:column;gap:10px}
+  .panel>*{flex:0 0 auto}
+  .card{background:var(--card);border-radius:16px;padding:13px 14px;box-shadow:var(--shadow);border:1px solid rgba(231,225,213,.75)}
+  .trip{display:flex;flex-direction:column;gap:0;padding:5px 13px}
+  .trow{display:flex;align-items:center;gap:10px;padding:10px 0;min-width:0}
+  .trow+.trow{border-top:1px dashed #eae4d8}
+  .dot{width:23px;height:23px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;font-weight:800;color:#fff;flex:0 0 auto}
+  .dot.from{background:#191c22}.dot.to{background:var(--accent)}.dot.time{background:#5b6068}
+  .field{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;text-align:left;border:0;background:none;padding:0}
+  .field i{font-style:normal;font-size:10.5px;color:var(--sub);letter-spacing:.5px}
+  .field b{font-size:15.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .field b.empty{color:#a4a8b0;font-weight:500}
+  .swap{flex:0 0 auto;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#faf8f3;font-size:15px;
+    display:grid;place-items:center;color:#444}
+  .swap:active{transform:scale(.93)}
+  .time-edit{display:flex;align-items:center;gap:7px;min-width:0}
+  .time-edit input{flex:1;min-width:0;border:0;background:transparent;font:650 14px/1.3 inherit;color:var(--ink);padding:1px 0}
+  .time-edit input::-webkit-calendar-picker-indicator{opacity:.45}
+  .pickbtn{all:unset;font-size:10.5px;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:3px 8px;background:#faf8f3;white-space:nowrap;cursor:pointer}
+  .timepicker{padding:4px 14px 18px;overflow-y:auto}
+  .timepicker .tpdate{display:flex;align-items:center;gap:8px;padding:6px 0 10px}
+  .timepicker .tpdate input{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;font-size:13px}
+  .tp-preview{font-size:22px;font-weight:800;letter-spacing:-.5px;margin:2px 0 8px;font-variant-numeric:tabular-nums}
+  .tp-label{font-size:10.5px;color:var(--sub);margin:10px 0 5px;letter-spacing:.5px}
+  .tp-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+  .tp-grid button{all:unset;text-align:center;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 0;font-size:12px;cursor:pointer;color:#3a3f47}
+  .tp-grid button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .tp-grid.minutes button{font-size:11.5px}
+  .tp-actions{display:flex;gap:8px;margin-top:14px}
+  .tp-actions button{flex:1;border:1px solid var(--line);background:#faf8f3;border-radius:10px;padding:10px;font-size:12.5px;font-weight:650;cursor:pointer}
+  .tp-actions button.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+  .badge.info{background:#eef2fb;color:#1d4ed8}
+  .nowbtn{all:unset;font-size:10.5px;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:3px 8px;background:#faf8f3;white-space:nowrap}
+  .opts{display:flex;align-items:center;gap:8px;padding:9px 0 4px;border-top:1px dashed #eae4d8}
+  .opts label{font-size:10.5px;color:var(--sub);flex:0 0 auto}
+  .opts select{flex:1;min-width:0;border:1px solid var(--line);background:#faf8f3;border-radius:9px;padding:7px 8px;font-size:12px;color:var(--ink)}
+  .planbtn{width:100%;border:0;border-radius:12px;background:var(--ink);color:#fff;font-weight:750;font-size:13.5px;padding:11px;margin-top:8px}
+  .planbtn:active{transform:scale(.99)}
+  .result{min-height:94px}
+  .empty{color:var(--sub);font-size:12.5px;line-height:1.8}
+  .empty b{color:var(--ink)}
+  .fareline{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+  .fare .num{font-size:38px;font-weight:850;letter-spacing:-1.6px;line-height:1}
+  .fare .unit{font-size:13px;font-weight:750;margin-left:2px;color:#444}
+  .sum{text-align:right;font-size:11.5px;line-height:1.65;color:var(--sub)}
+  .sum b{color:var(--ink);font-size:15px}
+  .badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+  .badge{font-size:10.5px;background:#f2efe7;color:#5c626c;border-radius:6px;padding:2px 7px}
+  .badge.ok{background:#e9f6f0;color:#1a7f5a}
+  .badge.warn{background:#fdeceb;color:#a30f2b}
+  .alt{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .alt button{all:unset;font-size:11px;border:1px solid var(--line);background:#faf8f3;border-radius:9px;padding:6px 8px;cursor:pointer;line-height:1.3}
+  .alt button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .alt button b{display:block;font-size:11.5px}
+  .legs{margin-top:11px;border-top:1px dashed #ece6da;padding-top:9px}
+  .leg{display:flex;gap:9px;padding:8px 0;border-bottom:1px dashed #f0ebe1}
+  .leg:last-child{border-bottom:0}
+  .leg .rail{width:3px;border-radius:2px;flex:0 0 auto;background:#ddd;margin-top:2px}
+  .leg .body{flex:1;min-width:0}
+  .leg .head{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .lc{display:inline-grid;place-items:center;min-width:23px;height:19px;padding:0 6px;border-radius:6px;color:#fff;
+    font-size:11px;font-weight:800;letter-spacing:.2px;white-space:nowrap}
+  .lc.dark{color:#191c22}
+  .leg .route{font-size:12.5px;font-weight:650;color:#262b33}
+  .leg .meta{font-size:11px;color:var(--sub);margin-top:3px;line-height:1.55}
+  .leg .times{font-size:10.5px;color:var(--sub);margin-top:2px}
+  .leg.trans .body{font-size:11.5px;color:#5b6068;line-height:1.6}
+  .leg.trans .rail{background:transparent;border-left:2px dotted #c9a9ae}
+  .stopsbox{margin-top:5px}
+  .stopsbox summary{cursor:pointer;font-size:10.5px;color:var(--accent);list-style:none}
+  .stopsbox summary::-webkit-details-marker{display:none}
+  .stopsbox summary::after{content:" ＋";color:#b3b7be}
+  .stopsbox[open] summary::after{content:" －"}
+  .stopsbox ol{margin:6px 0 0 16px;padding:0;font-size:11px;color:#4f555f;line-height:1.9}
+  .warn{margin-top:10px;padding:9px 10px;border-radius:10px;background:#fdeceb;color:#a30f2b;font-size:11.5px;line-height:1.6}
+  .note{font-size:10.5px;color:#9aa0a8;line-height:1.6;margin-top:9px}
+  .datafoot{font-size:10px;color:#a6aab2;line-height:1.6;padding:0 4px}
+  .facts h3{margin:0 0 6px;font-size:12.5px}
+  .factgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:7px}
+  .fact{background:#faf8f3;border:1px solid #eee8dc;border-radius:10px;padding:7px 8px}
+  .fact b{display:block;font-size:14px}
+  .fact span{font-size:9.5px;color:var(--sub)}
+  .factnote{font-size:10.5px;color:var(--sub);line-height:1.6;margin-top:8px}
+  .mask{position:fixed;inset:0;background:rgba(20,18,14,.38);z-index:20;display:none}
+  .mask.on{display:block}
+  .sheet{position:fixed;z-index:21;left:0;right:0;bottom:0;background:var(--paper);border-radius:18px 18px 0 0;
+    max-height:82vh;display:none;flex-direction:column;box-shadow:0 -16px 40px -18px rgba(0,0,0,.4)}
+  .sheet.on{display:flex}
+  .sheet-head{display:flex;align-items:center;gap:8px;padding:11px 12px 8px;flex:0 0 auto}
+  .sheet-head input{flex:1;min-width:0;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 12px;font-size:13px;outline:none}
+  .sheet-head button{all:unset;font-size:12px;color:var(--accent);padding:8px 4px;white-space:nowrap}
+  .sheet-title{padding:10px 14px 2px;font-size:12px;color:var(--sub);flex:0 0 auto}
+  .list{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 10px 22px}
+  .item{display:flex;align-items:center;gap:9px;padding:10px 9px;border-radius:10px;cursor:pointer}
+  .item:active{background:#efeade}
+  .item .nm{font-size:13px;font-weight:650;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item .sub{font-size:10.5px;color:var(--sub);margin-top:2px}
+  .item .right{margin-left:auto;text-align:right;font-size:10px;color:var(--sub);flex:0 0 auto}
+  .item .lines{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}
+  .group{padding:10px 10px 3px;font-size:10.5px;color:var(--sub);font-weight:700;letter-spacing:.5px}
+  .info{padding:4px 14px 24px;overflow-y:auto}
+  .info h2{margin:6px 0 4px;font-size:18px}
+  .info h3{margin:16px 0 6px;font-size:12px;color:var(--sub);letter-spacing:.4px}
+  .info p,.info li{font-size:11.5px;line-height:1.75;color:#3f444c}
+  .info table{width:100%;border-collapse:collapse;font-size:10.5px;margin-top:6px}
+  .info td{padding:5px 2px;border-bottom:1px solid #eee8dc;vertical-align:top}
+  .info td:last-child{text-align:right;white-space:nowrap;color:var(--sub)}
+  .info code{font-size:10px;background:#f1ede3;padding:1px 4px;border-radius:4px}
+  @media (min-width:980px){
+    .layout{flex-direction:row;gap:12px;padding:0 18px 18px;align-items:stretch}
+    .map-wrap{flex:1;height:auto;min-height:0;margin:0}
+    .panel{width:408px;flex:0 0 408px;padding:0 3px 20px}
+    .top{padding:14px 22px 10px}
+    .brand b{font-size:17px}
+    .sheet{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:480px;max-height:76vh;border-radius:16px}
+    .sheet.on{animation:none}
+  }
+  @media (max-width:600px){
+    .osm-attr{bottom:42px;font-size:8px}
+  }
+  @media (max-width:360px){
+    .brand small{display:none}
+    .factgrid{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="logo">M</div>
+    <div><b>中国地铁 · 离线导航</b><small>China Metro Offline · 单文件运行</small></div>
+  </div>
+  <div class="top-actions">
+    <button class="citybtn" id="cityBtn">上海 <span>▾</span></button>
+    <button class="iconbtn" id="infoBtn" aria-label="数据说明">ⓘ</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="map-wrap" id="mapWrap">
+    <svg id="map" role="img" aria-label="城市地铁线路图"></svg>
+    <div class="maptag" id="mapTag">上海地铁</div>
+    <div class="mapctl">
+      <button id="zin" aria-label="放大">＋</button>
+      <button id="zout" aria-label="缩小">－</button>
+      <button id="zfit" aria-label="复位">⤢</button>
+      <button id="tileBtn" class="on" aria-label="显示或隐藏离线底图">图</button>
+    </div>
+    <div class="osm-attr" id="osmAttr">© OpenStreetMap contributors · 离线底图</div>
+    <div class="hint" id="hint">轻点地图车站选择起点</div>
+    <div class="hoverTip" id="hoverTip"></div>
+  </section>
+
+  <aside class="panel">
+    <section class="card trip">
+      <div class="trow">
+        <span class="dot from">起</span>
+        <button class="field" id="fromBtn"><i>起点</i><b class="empty">选择起点站</b></button>
+      </div>
+      <div class="trow">
+        <span class="dot to">终</span>
+        <button class="field" id="toBtn"><i>终点</i><b class="empty">选择终点站</b></button>
+        <button class="swap" id="swapBtn" aria-label="交换起终点">⇅</button>
+      </div>
+      <div class="trow">
+        <span class="dot time">时</span>
+        <div class="field"><i>出发时间</i>
+          <div class="time-edit"><input type="datetime-local" id="depInput"><button class="pickbtn" id="timePickBtn">选择</button><button class="nowbtn" id="nowBtn">现在</button></div>
+        </div>
+      </div>
+      <div class="opts">
+        <label for="pref">偏好</label>
+        <select id="pref">
+          <option value="fast">最快到达</option>
+          <option value="few">最少换乘</option>
+          <option value="stops">最少站数</option>
+          <option value="walk">最少步行</option>
+          <option value="fare">最低票价</option>
+          <option value="balanced">综合推荐</option>
+        </select>
+      </div>
+      <button class="planbtn" id="planBtn">规划路线</button>
+    </section>
+
+    <section class="card result" id="result"></section>
+
+    <section class="card facts" id="cityFacts"></section>
+
+    <div class="datafoot" id="footer">数据加载中…</div>
+  </aside>
+</main>
+
+<div class="mask" id="mask"></div>
+
+<div class="sheet" id="citySheet">
+  <div class="sheet-head"><input id="cityQ" type="search" placeholder="搜索城市 / 拼音 / 英文" autocomplete="off"><button data-close>取消</button></div>
+  <div class="list" id="cityList"></div>
+</div>
+
+<div class="sheet" id="stationSheet">
+  <div class="sheet-title" id="stationTitle">选择车站</div>
+  <div class="sheet-head"><input id="stationQ" type="search" placeholder="搜索车站 / 英文名" autocomplete="off"><button data-close>取消</button></div>
+  <div class="list" id="stationList"></div>
+</div>
+
+<div class="sheet" id="timeSheet">
+  <div class="sheet-head"><input id="tpDummy" type="search" placeholder="选择出发时间" readonly><button data-close>取消</button></div>
+  <div class="timepicker">
+    <div class="tpdate"><input type="date" id="tpDate"></div>
+    <div class="tp-preview" id="tpPreview"></div>
+    <div class="tp-label">小时</div><div class="tp-grid" id="tpHours"></div>
+    <div class="tp-label">分钟（5 分钟步进）</div><div class="tp-grid minutes" id="tpMinutes"></div>
+    <div class="tp-actions"><button id="tpNow">现在</button><button id="tpOk" class="primary">确定</button></div>
+  </div>
+</div>
+
+<div class="sheet" id="infoSheet">
+  <div class="sheet-head"><input id="infoDummy" type="search" placeholder="数据说明与覆盖范围" readonly><button data-close>关闭</button></div>
+  <div class="info" id="infoBody"></div>
+</div>
+
+<script>
+"use strict";
+const DB = /*__DB__*/;
+const APP_VERSION = "1.0.0";
+const DATA_VERSION = DB.dataVersion;
+const byId = new Map(DB.cities.map(function(c){ return [c.id,c]; }));
+const runtimeCache = new Map();
+const MISSING_CITIES = ["常州","东莞","佛山","绍兴","嘉兴","金华","洛阳","南通","芜湖","台州","泉州","三亚","温州"];
+const state = {
+  cityId: "cn-shanghai", city: null, from: null, to: null, routes: [], sel: 0,
+  dep: new Date(), pref: "fast", sheet: null, sheetTarget: null, tilesOn: true
+};
+var view = { k: 1, x: 0, y: 0, W: 1, H: 1, baseK: 1 };
+var mapWorld = null, mapLayers = null, mapBuildToken = 0;
+var cityRuntime = null;
+var routeDrawn = false;
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function pad(n){ return (n < 10 ? "0" : "") + n; }
+function fmtMin(t){
+  if (t == null || !isFinite(t)) return "—";
+  var total = Math.round(t), day = Math.floor(total / 1440), m = total - day * 1440;
+  var h = Math.floor(m / 60), mm = m % 60;
+  return (day > 0 ? "次日 " : "") + pad(h) + ":" + pad(mm);
+}
+function fmtDuration(min){
+  if (min == null || !isFinite(min)) return "—";
+  var m = Math.max(0, Math.round(min));
+  if (m < 60) return m + " 分钟";
+  return Math.floor(m / 60) + " 小时 " + (m % 60) + " 分";
+}
+function money(v, currency){
+  if (v == null) return "—";
+  var sym = currency === "HKD" ? "HK$" : currency === "MOP" ? "MOP$" : "¥";
+  return sym + (Number.isInteger(v) ? v : v.toFixed(1));
+}
+function dateInputValue(d){ return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+function parseDateInput(v){
+  if (!v) return null;
+  var p = v.split(/[-T:]/).map(Number);
+  if (p.length < 5 || p.some(isNaN)) return null;
+  return new Date(p[0], p[1]-1, p[2], p[3], p[4], 0, 0);
+}
+function syncTimeControls(){
+  var inp=document.getElementById("depInput");
+  if(inp) inp.value=dateInputValue(state.dep);
+}
+var picker={date:null,hour:0,minute:0};
+function openTimePicker(){
+  picker.date=new Date(state.dep.getFullYear(),state.dep.getMonth(),state.dep.getDate());
+  picker.hour=state.dep.getHours(); picker.minute=state.dep.getMinutes();
+  openSheet("timeSheet");
+  renderTimePicker();
+}
+function renderTimePicker(){
+  var dt=document.getElementById("tpDate"), prev=document.getElementById("tpPreview");
+  if(dt) dt.value=picker.date.getFullYear()+"-"+pad(picker.date.getMonth()+1)+"-"+pad(picker.date.getDate());
+  if(prev) prev.textContent=picker.date.getFullYear()+"/"+pad(picker.date.getMonth()+1)+"/"+pad(picker.date.getDate())+" "+pad(picker.hour)+":"+pad(picker.minute);
+  var hh=document.getElementById("tpHours"), mm=document.getElementById("tpMinutes");
+  if(hh){
+    var html="";
+    for(var h=0;h<24;h++) html+='<button data-h="'+h+'" class="'+(h===picker.hour?"on":"")+'">'+pad(h)+'</button>';
+    hh.innerHTML=html;
+    var hs=hh.querySelectorAll("[data-h]");
+    for(var i=0;i<hs.length;i++) hs[i].onclick=function(){ picker.hour=Number(this.getAttribute("data-h")); renderTimePicker(); };
+  }
+  if(mm){
+    var mhtml="";
+    for(var m=0;m<60;m+=5) mhtml+='<button data-m="'+m+'" class="'+(m===picker.minute?"on":"")+'">'+pad(m)+'</button>';
+    mm.innerHTML=mhtml;
+    var ms=mm.querySelectorAll("[data-m]");
+    for(var j=0;j<ms.length;j++) ms[j].onclick=function(){ picker.minute=Number(this.getAttribute("data-m")); renderTimePicker(); };
+  }
+}
+function applyTimePicker(){
+  state.dep=new Date(picker.date.getFullYear(),picker.date.getMonth(),picker.date.getDate(),picker.hour,picker.minute,0,0);
+  syncTimeControls();
+  closeSheet();
+  plan();
+}
+function dayIndex(d){ return (d.getDay() + 6) % 7; }
+function lineName(c, li){ return (c.raw.lines[li] || ["?"])[0]; }
+function lineColor(c, li){ return (c.raw.lines[li] || [null,null,"#888"])[2] || "#888"; }
+function isLight(hex){
+  var h = String(hex || "#888").replace("#","");
+  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  var n = parseInt(h,16); if (isNaN(n)) return false;
+  var r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  return (r*299+g*587+b*114)/1000 > 176;
+}
+function modeName(c, li){
+  var m=(c.raw.lines[li]||[])[4]||"metro";
+  return {metro:"地铁",suburban_rail:"市域铁路",light_rail:"轻轨",monorail:"单轨",tram:"有轨电车"}[m]||m;
+}
+function lineChip(c, li){
+  var col = lineColor(c,li);
+  var title=lineName(c,li)+" · "+modeName(c,li);
+  return '<span class="lc' + (isLight(col) ? " dark" : "") + '" title="'+esc(title)+'" style="background:' + col + '">' + esc(lineName(c,li)) + '</span>';
+}
+function stationName(c, si){ return (c.raw.stations[si] || ["?"])[0]; }
+function stationEn(c, si){ return (c.raw.stations[si] || ["",""])[1] || ""; }
+
+/* ---------------- city runtime ---------------- */
+function getCity(id){
+  if (runtimeCache.has(id)) return runtimeCache.get(id);
+  var raw = byId.get(id);
+  if (!raw) return null;
+  var c = { raw: raw, id: id };
+  var nSt = raw.stations.length, nStop = raw.stops.length, nLine = raw.lines.length;
+  c.stopStation = new Int32Array(nStop);
+  c.stopLine = new Int32Array(nStop);
+  c.stationStops = new Array(nSt);
+  c.stationLines = new Array(nSt);
+  for (var i=0;i<nSt;i++){ c.stationStops[i]=[]; c.stationLines[i]=[]; }
+  for (var s=0;s<nStop;s++){
+    var st=raw.stops[s][0], li=raw.stops[s][1];
+    c.stopStation[s]=st; c.stopLine[s]=li;
+    c.stationStops[st].push(s);
+    if (c.stationLines[st].indexOf(li) < 0) c.stationLines[st].push(li);
+  }
+  c.linePatterns = new Array(nLine);
+  for (var l=0;l<nLine;l++) c.linePatterns[l]=[];
+  for (var p=0;p<raw.patterns.length;p++){
+    var pat=raw.patterns[p];
+    if (c.linePatterns[pat[0]]) c.linePatterns[pat[0]].push(pat);
+  }
+  c.lineAdj = new Array(nLine);
+  for (var la=0;la<nLine;la++) c.lineAdj[la]=new Map();
+  for (var sg=0; sg<raw.segments.length; sg++){
+    var sa=raw.segments[sg][0], sb=raw.segments[sg][1], sl=c.stopLine[sa];
+    if(!c.lineAdj[sl].has(sa)) c.lineAdj[sl].set(sa,[]);
+    if(!c.lineAdj[sl].has(sb)) c.lineAdj[sl].set(sb,[]);
+    c.lineAdj[sl].get(sa).push(sb); c.lineAdj[sl].get(sb).push(sa);
+  }
+  c.ttByStop = new Map();
+  for (var t=0;t<raw.timetables.length;t++){
+    var rec=raw.timetables[t], list=c.ttByStop.get(rec[0]);
+    if (!list){ list=[]; c.ttByStop.set(rec[0],list); }
+    list.push(rec);
+  }
+  c.farePos = new Int32Array(nSt); c.farePos.fill(-1);
+  for (var f=0; f<raw.fareOrder.length; f++) c.farePos[raw.fareOrder[f]] = f;
+  c.adj = null;
+  c.proj = null;
+  c.baseK = 1;
+  c.search = [];
+  for (var i2=0;i2<nSt;i2++){
+    var lines = c.stationLines[i2].map(function(x){ return lineName(c,x); });
+    c.search.push({ s:i2, n:stationName(c,i2).toLowerCase(), e:stationEn(c,i2).toLowerCase(), lines:lines });
+  }
+  runtimeCache.set(id,c);
+  return c;
+}
+
+/* ---------------- graph + routing ---------------- */
+function ensureAdj(c){
+  if (c.adj) return c.adj;
+  var adj = new Array(c.raw.stops.length);
+  for (var i=0;i<adj.length;i++) adj[i]=[];
+  var segs=c.raw.segments;
+  for (var s=0;s<segs.length;s++){
+    var a=segs[s][0], b=segs[s][1], sec=segs[s][2], km=segs[s][3];
+    adj[a].push({to:b, sec:sec, km:km, kind:"ride", line:c.stopLine[a]});
+    adj[b].push({to:a, sec:sec, km:km, kind:"ride", line:c.stopLine[b]});
+  }
+  var xf=c.raw.transfers;
+  for (var x=0;x<xf.length;x++){
+    var u=xf[x][0], v=xf[x][1], w=xf[x][2], oos=xf[x][3];
+    adj[u].push({to:v, sec:w, km:0, kind:"transfer", oos:!!oos});
+  }
+  c.adj=adj;
+  return adj;
+}
+function Heap(){
+  this.a=[];
+}
+Heap.prototype.push=function(p,v){
+  var a=this.a; a.push([p,v]); var i=a.length-1;
+  while(i>0){ var par=(i-1)>>1; if(a[par][0]<=a[i][0]) break; var t=a[par]; a[par]=a[i]; a[i]=t; i=par; }
+};
+Heap.prototype.pop=function(){
+  var a=this.a; if(!a.length) return null;
+  var top=a[0], last=a.pop();
+  if(a.length){ a[0]=last; var i=0; for(;;){ var l=i*2+1,r=l+1,m=i; if(l<a.length&&a[l][0]<a[m][0])m=l; if(r<a.length&&a[r][0]<a[m][0])m=r; if(m===i)break; var t=a[m];a[m]=a[i];a[i]=t;i=m; } }
+  return top;
+};
+Heap.prototype.size=function(){ return this.a.length; };
+
+function edgeCost(e, mode){
+  if (mode === "few") return (e.kind === "transfer" ? 1e7 : 0) + e.sec;
+  if (mode === "stops") return (e.kind === "ride" ? 1e7 : 0) + e.sec;
+  if (mode === "walk") return e.kind === "transfer" ? e.sec * 1e4 + 1 : e.sec;
+  if (mode === "balanced") return e.sec + (e.kind === "transfer" ? 150 : 0);
+  return e.sec + (e.kind === "transfer" ? 90 : 0);
+}
+function dijkstra(c, fromSt, toSt, mode){
+  var adj=ensureAdj(c);
+  var sources=c.stationStops[fromSt], targets=new Set(c.stationStops[toSt]);
+  if (!sources.length || !targets.size) return null;
+  var dist=new Map(), prev=new Map(), heap=new Heap();
+  for (var i=0;i<sources.length;i++){ dist.set(sources[i],0); heap.push(0,sources[i]); }
+  var end=null;
+  while(heap.size()){
+    var top=heap.pop(); var d=top[0], u=top[1];
+    if (d > (dist.get(u)==null ? Infinity : dist.get(u))) continue;
+    if (targets.has(u)){ end=u; break; }
+    var es=adj[u];
+    for (var k=0;k<es.length;k++){
+      var e=es[k], nd=d+edgeCost(e,mode);
+      var cur=dist.get(e.to)==null?Infinity:dist.get(e.to);
+      if (nd < cur-1e-9){ dist.set(e.to,nd); prev.set(e.to,{from:u,edge:e}); heap.push(nd,e.to); }
+    }
+  }
+  if (end==null) return null;
+  var chain=[]; var cur=end;
+  while(cur!=null){ chain.push(cur); var p=prev.get(cur); cur=p?p.from:null; }
+  chain.reverse();
+  return { path:chain, cost:dist.get(end) };
+}
+
+function buildLegs(c, path){
+  var legs=[];
+  var cur=null;
+  for (var i=1;i<path.length;i++){
+    var a=path[i-1], b=path[i];
+    var edge=null;
+    var es=ensureAdj(c)[a];
+    for (var k=0;k<es.length;k++){ if(es[k].to===b){ if(!edge||es[k].sec<edge.sec) edge=es[k]; } }
+    if (!edge) continue;
+    if (edge.kind === "ride"){
+      if (cur && cur.kind === "ride" && cur.line === edge.line){
+        cur.stations.push(b); cur.sec += edge.sec; cur.km += (edge.km||0); cur.edgeSec.push(edge.sec); cur.edgeKm.push(edge.km||0);
+      } else {
+        cur = {kind:"ride", line:edge.line, stations:[a,b], sec:edge.sec, km:(edge.km||0), edgeSec:[edge.sec], edgeKm:[edge.km||0]};
+        legs.push(cur);
+      }
+    } else {
+      cur = null;
+      legs.push({kind:"transfer", from:a, to:b, sec:edge.sec, km:0, oos:!!edge.oos});
+    }
+  }
+  return splitBranches(c, legs);
+}
+
+function coverLength(pattern, seq, start){
+  var best=0;
+  for (var i=0;i<pattern.length;i++){
+    if (pattern[i] !== seq[start]) continue;
+    for (var dir=-1;dir<=1;dir+=2){
+      var j=i, k=start;
+      while (k<seq.length && j>=0 && j<pattern.length && pattern[j]===seq[k]){ j+=dir;k++; }
+      if (k-start>best) best=k-start;
+    }
+  }
+  return best;
+}
+function splitBranches(c, legs){
+  var out=[];
+  for (var li=0; li<legs.length; li++){
+    var leg=legs[li];
+    if (leg.kind !== "ride"){ out.push(leg); continue; }
+    var pats=c.linePatterns[leg.line] || [];
+    if (!pats.length || leg.stations.length < 3){ out.push(leg); continue; }
+    // If a published service from the boarding stop actually reaches the alight stop,
+    // it is a through train even when no single pattern contains both branches.
+    var lastStop=leg.stations[leg.stations.length-1], through=false;
+    var recs0=c.ttByStop.get(leg.stations[0]) || [];
+    for (var ri=0;ri<recs0.length;ri++){
+      if (stopAhead(c,leg.line,leg.stations[0],lastStop,recs0[ri][1])){ through=true; break; }
+    }
+    if (through){ out.push(leg); continue; }
+    var seq=leg.stations, i=0, guard=0;
+    while(i<seq.length-1 && guard++<20){
+      var best=0;
+      for (var p=0;p<pats.length;p++){
+        var cov=coverLength(pats[p][1],seq,i);
+        if (cov>best) best=cov;
+      }
+      if (best>=seq.length-i || best<2){
+        var sub={kind:"ride",line:leg.line,stations:seq.slice(i),sec:0,km:0,edgeSec:[],edgeKm:[]};
+        for (var q=i;q<seq.length-1;q++){ sub.sec += leg.edgeSec[q]; sub.km += leg.edgeKm[q]; sub.edgeSec.push(leg.edgeSec[q]); sub.edgeKm.push(leg.edgeKm[q]); }
+        out.push(sub); break;
+      }
+      var end=i+best-1;
+      var s1={kind:"ride",line:leg.line,stations:seq.slice(i,end+1),sec:0,km:0,edgeSec:[],edgeKm:[]};
+      for (var q2=i;q2<end;q2++){ s1.sec += leg.edgeSec[q2]; s1.km += leg.edgeKm[q2]; s1.edgeSec.push(leg.edgeSec[q2]); s1.edgeKm.push(leg.edgeKm[q2]); }
+      out.push(s1);
+      out.push({kind:"transfer",from:seq[end],to:seq[end],sec:120,km:0,sameLine:true});
+      i=end;
+    }
+  }
+  return out;
+}
+
+function stopAhead(c, line, fromStop, toStop, destStop){
+  if (!destStop || destStop===fromStop) return false;
+  if (destStop===toStop) return true;
+  // Does a train from `fromStop` to `destStop` pass through `toStop`?
+  // BFS on the line's physical stop graph (works across branch junctions and loops).
+  var adj=c.lineAdj[line]; if(!adj) return false;
+  var q=[fromStop], prev=new Map(); prev.set(fromStop,null); var found=false;
+  while(q.length){
+    var u=q.shift(); if(u===destStop){found=true;break;}
+    var ns=adj.get(u)||[];
+    for(var i=0;i<ns.length;i++){ var v=ns[i]; if(!prev.has(v)){ prev.set(v,u); q.push(v); } }
+  }
+  if(!found) return false;
+  var cur=destStop, seen=false;
+  while(cur!=null){ if(cur===toStop){seen=true;break;} cur=prev.get(cur); }
+  return seen;
+}
+function decodeTime(str, day){
+  if (!str) return null;
+  var s=str.substr(day*3,3);
+  if (!s || s==="---") return null;
+  var n=0;
+  for (var i=0;i<s.length;i++){ var ch=s[i]; var v="0123456789abcdefghijklmnopqrstuvwxyz".indexOf(ch); if(v<0) return null; n=n*36+v; }
+  return n;
+}
+function bestWindow(c, line, fromStop, toStop, d){
+  var recs=c.ttByStop.get(fromStop) || [];
+  var valid=[];
+  for (var i=0;i<recs.length;i++){
+    var r=recs[i], destStop=r[1];
+    if (stopAhead(c,line,fromStop,toStop,destStop)) valid.push(r);
+  }
+  if (!valid.length){
+    // loop or incomplete data: use any record, but only if no destination filter possible
+    var lineObj=c.raw.lines[line];
+    if (lineObj && lineObj[5]) valid=recs;
+  }
+  if (!valid.length) return null;
+  var di=dayIndex(d), first=null, last=null, best=null;
+  for (var j=0;j<valid.length;j++){
+    var rr=valid[j];
+    var f=decodeTime(rr[2],di), l=decodeTime(rr[3],di);
+    if (f!=null && (first==null || f<first)) first=f;
+    if (l!=null && (last==null || l>last)){ last=l; best=rr; }
+  }
+  if (first==null && last==null) return null;
+  return {first:first,last:last,destStop:best?best[1]:null,destName:best?stationName(c,c.stopStation[best[1]]):null};
+}
+function legRideMinutes(leg){ return leg.sec/60; }
+
+function annotate(c, legs){
+  for (var i=0;i<legs.length;i++){
+    var leg=legs[i];
+    if (leg.kind !== "ride") continue;
+    var from=leg.stations[0], to=leg.stations[leg.stations.length-1];
+    leg.from=from; leg.to=to;
+    leg.window=bestWindow(c,leg.line,from,to,state.dep);
+    leg.ride=legRideMinutes(leg);
+  }
+  return legs;
+}
+
+function planJourney(c, legs, d){
+  var depMin=d.getHours()*60+d.getMinutes();
+  var t=depMin, waits=0, walks=0, slack=Infinity, infeasible=null, out=[];
+  for (var i=0;i<legs.length;i++){
+    var leg=legs[i];
+    if (leg.kind === "transfer"){
+      if (!leg.sameLine) walks += leg.sec/60;
+      else walks += 0;
+      t += leg.sec/60;
+      out.push({leg:leg, walk:leg.sec/60});
+      continue;
+    }
+    var ride=leg.ride, w=leg.window;
+    var board, wait;
+    if (w && w.last != null){
+      if (t > w.last + 0.001){ infeasible={leg:leg, reason:"last", last:w.last, from:leg.from}; break; }
+      if (w.first != null && t < w.first) board=w.first;
+      else board=Math.min(t+3, w.last);
+      if (board > w.last + 0.001){ infeasible={leg:leg, reason:"last", last:w.last, from:leg.from}; break; }
+      wait=board-t;
+      slack=Math.min(slack,w.last-board);
+    } else {
+      board=t+3; wait=3;
+    }
+    waits += wait;
+    t=board+ride;
+    out.push({leg:leg, board:board, arrive:t, wait:wait, ride:ride, window:w});
+  }
+  if (infeasible) return {ok:false, infeasible:infeasible, parts:out, dep:depMin, waits:waits, walks:walks};
+  return {ok:true, parts:out, arrive:t, total:t-depMin, dep:depMin, waits:waits, walks:walks,
+    latest: (isFinite(slack) ? Math.max(depMin, depMin+slack-1) : null)};
+}
+
+function fareFor(c, fromSt, toSt){
+  if (fromSt === toSt) return {value:0, official:true};
+  var a=c.farePos[fromSt], b=c.farePos[toSt];
+  if (a<0 || b<0) return null;
+  var row=c.raw.fares[a]; if (!row) return null;
+  var ch=row[b]; if (!ch || ch===".") return null;
+  var v="0123456789abcdefghijklmnopqrstuvwxyz".indexOf(ch);
+  return v<0 ? null : {value:v, official:true};
+}
+
+function routeSignature(legs){
+  return legs.map(function(l){ return l.kind==="ride" ? "R"+l.line+":"+l.stations[0]+"-"+l.stations[l.stations.length-1] : "T"+l.from; }).join("|");
+}
+function computeRoutes(c, fromSt, toSt, d){
+  var modes=[["fast","最快"],["few","少换乘"],["stops","少站"],["walk","少步行"]];
+  var found=[], seen=new Set();
+  for (var i=0;i<modes.length;i++){
+    var r=dijkstra(c,fromSt,toSt,modes[i][0]);
+    if (!r) continue;
+    var legs=annotate(c, buildLegs(c,r.path));
+    var plan=planJourney(c,legs,d);
+    var fare=fareFor(c,fromSt,toSt);
+    var sig=routeSignature(legs);
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    found.push({mode:modes[i][0], label:modes[i][1], legs:legs, plan:plan, fare:fare,
+      sig:sig, cost:r.cost});
+  }
+  return found;
+}
+
+/* ---------------- map ---------------- */
+function projectCity(c){
+  if (c.proj) return c.proj;
+  var n=c.raw.stations.length, xs=new Float64Array(n), ys=new Float64Array(n);
+  var minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  for (var i=0;i<n;i++){
+    var lon=c.raw.stations[i][2], lat=c.raw.stations[i][3];
+    var x=(lon+180)/360;
+    var y=(1-Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360))/Math.PI)/2;
+    xs[i]=x; ys[i]=y;
+    if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y;
+  }
+  var w=Math.max(maxX-minX,1e-9), h=Math.max(maxY-minY,1e-9), s=1/Math.max(w,h);
+  var ox=0.08+(1-(w*s))*0.5, oy=0.08+(1-(h*s))*0.5;
+  var px=new Float64Array(n), py=new Float64Array(n);
+  for (var j=0;j<n;j++){ px[j]=ox+(xs[j]-minX)*s; py[j]=oy+(ys[j]-minY)*s; }
+  c.proj={px:px,py:py,minX:minX,minY:minY,s:s,ox:ox,oy:oy};
+  return c.proj;
+}
+function addTiles(c,proj,g){
+  var hasMosaic=!!c.raw.tileMosaic, hasTiles=!!(c.raw.tiles&&c.raw.tiles.length);
+  if(!hasMosaic && !hasTiles) return;
+  var n=Math.pow(2,c.raw.tileZ||10), ts=1/n;
+  if(hasMosaic){
+    var m=c.raw.tileMosaic, mw=m[3]/256*ts, mh=m[4]/256*ts;
+    var img=document.createElementNS("http://www.w3.org/2000/svg","image");
+    img.setAttribute("x",String(proj.ox+(m[1]*ts-proj.minX)*proj.s));
+    img.setAttribute("y",String(proj.oy+(m[2]*ts-proj.minY)*proj.s));
+    img.setAttribute("width",String(mw*proj.s));
+    img.setAttribute("height",String(mh*proj.s));
+    img.setAttribute("preserveAspectRatio","none");
+    var murl="data:"+(c.raw.tileMime||"image/jpeg")+";base64,"+m[5];
+    img.setAttribute("href",murl);
+    img.setAttributeNS("http://www.w3.org/1999/xlink","xlink:href",murl);
+    g.appendChild(img); return;
+  }
+  for(var i=0;i<c.raw.tiles.length;i++){
+    var t=c.raw.tiles[i];
+    var img=document.createElementNS("http://www.w3.org/2000/svg","image");
+    var pad=ts*proj.s*0.003;
+    img.setAttribute("x",String(proj.ox+(t[0]*ts-proj.minX)*proj.s-pad));
+    img.setAttribute("y",String(proj.oy+(t[1]*ts-proj.minY)*proj.s-pad));
+    img.setAttribute("width",String(ts*proj.s+pad*2));
+    img.setAttribute("height",String(ts*proj.s+pad*2));
+    img.setAttribute("preserveAspectRatio","none");
+    var url="data:"+(c.raw.tileMime||"image/png")+";base64,"+t[2];
+    img.setAttribute("href",url);
+    img.setAttributeNS("http://www.w3.org/1999/xlink","xlink:href",url);
+    g.appendChild(img);
+  }
+}
+function buildMap(c){
+  var proj=projectCity(c);
+  var svg=$("map");
+  var token=++mapBuildToken;
+  var world=document.createElementNS("http://www.w3.org/2000/svg","g");
+  world.setAttribute("id","world");
+  var gTiles=document.createElementNS("http://www.w3.org/2000/svg","g"); gTiles.setAttribute("id","gTiles");
+  var gLines=document.createElementNS("http://www.w3.org/2000/svg","g");
+  var gRoute=document.createElementNS("http://www.w3.org/2000/svg","g"); gRoute.setAttribute("id","gRoute");
+  var gSt=document.createElementNS("http://www.w3.org/2000/svg","g");
+  var gLab=document.createElementNS("http://www.w3.org/2000/svg","g"); gLab.setAttribute("id","gLabels");
+  world.appendChild(gTiles); world.appendChild(gLines); world.appendChild(gRoute); world.appendChild(gSt); world.appendChild(gLab);
+  svg.innerHTML=""; svg.appendChild(world);
+  mapWorld=world; mapLayers={tiles:gTiles,lines:gLines,route:gRoute,stations:gSt,labels:gLab};
+  addTiles(c,proj,gTiles);
+  // one path per line (fewer SVG elements, avoids vector-effect rasterization gaps)
+  var seen=new Set(), linePaths={};
+  for (var s=0;s<c.raw.segments.length;s++){
+    var seg=c.raw.segments[s], a=seg[0], b=seg[1], li=c.stopLine[a];
+    var key=li+":"+Math.min(a,b)+":"+Math.max(a,b);
+    if (seen.has(key)) continue; seen.add(key);
+    var d=(linePaths[li]||(linePaths[li]=""))+"M"+proj.px[c.stopStation[a]]+" "+proj.py[c.stopStation[a]]+"L"+proj.px[c.stopStation[b]]+" "+proj.py[c.stopStation[b]];
+    linePaths[li]=d;
+  }
+  c.lineEls=[];
+  Object.keys(linePaths).forEach(function(k){
+    var li=Number(k), path=document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d",linePaths[k]); path.setAttribute("fill","none");
+    path.setAttribute("stroke",lineColor(c,li)); path.setAttribute("stroke-width","4");
+    path.setAttribute("stroke-linecap","round"); path.setAttribute("stroke-linejoin","round");
+    gLines.appendChild(path); c.lineEls.push({el:path,base:4});
+  });
+  // stations
+  var inter=new Set();
+  for (var i=0;i<c.raw.stations.length;i++) if(c.stationLines[i].length>1) inter.add(i);
+  c.stationEls=[]; c.labelEls=[];
+  for (var st=0;st<c.raw.stations.length;st++){
+    var circ=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    circ.setAttribute("cx",proj.px[st]); circ.setAttribute("cy",proj.py[st]);
+    circ.setAttribute("fill","#fff");
+    circ.setAttribute("stroke", inter.has(st) ? "#191c22" : "#7b8088");
+    circ.setAttribute("stroke-width","1.4");
+    circ.setAttribute("data-s",String(st));
+    gSt.appendChild(circ); c.stationEls[st]=circ;
+    var t=document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x",proj.px[st]); t.setAttribute("y",proj.py[st]);
+    t.setAttribute("text-anchor","middle"); t.setAttribute("dominant-baseline","middle");
+    t.textContent=stationName(c,st);
+    t.style.display="none";
+    gLab.appendChild(t); c.labelEls[st]=t;
+  }
+  fitView();
+  drawRoute();
+}
+function fitView(){
+  if (!state.city || !mapWorld) return;
+  var c=state.city, proj=projectCity(c);
+  view.W=$("mapWrap").clientWidth || 360;
+  view.H=$("mapWrap").clientHeight || 300;
+  var pad=18;
+  var k=Math.min((view.W-pad*2)/1,(view.H-pad*2)/1);
+  view.baseK=k; view.k=k;
+  view.x=(view.W-k)/2; view.y=(view.H-k)/2;
+  applyView();
+}
+function setTransformOnly(){
+  if (mapWorld) mapWorld.setAttribute("transform","translate("+view.x+" "+view.y+") scale("+view.k+")");
+}
+function clampTileView(c){
+  if(!c.raw.tiles && !c.raw.tileMosaic) return;
+  var p=projectCity(c), n=Math.pow(2,c.raw.tileZ||10), ts=1/n;
+  var minX,minY,maxX,maxY;
+  if(c.raw.tileMosaic){
+    var m=c.raw.tileMosaic;
+    minX=m[1]; minY=m[2]; maxX=m[1]+m[3]/256; maxY=m[2]+m[4]/256;
+  } else {
+    minX=Infinity;minY=Infinity;maxX=-Infinity;maxY=-Infinity;
+    for(var i=0;i<c.raw.tiles.length;i++){
+      var t=c.raw.tiles[i];
+      if(t[0]<minX)minX=t[0]; if(t[0]>maxX)maxX=t[0];
+      if(t[1]<minY)minY=t[1]; if(t[1]>maxY)maxY=t[1];
+    }
+    maxX=maxX+1; maxY=maxY+1;
+  }
+  var bx0=p.ox+(minX*ts-p.minX)*p.s, bx1=p.ox+(maxX*ts-p.minX)*p.s;
+  var by0=p.oy+(minY*ts-p.minY)*p.s, by1=p.oy+(maxY*ts-p.minY)*p.s;
+  var bw=bx1-bx0, bh=by1-by0;
+  if(bw<=0||bh<=0) return;
+  var kMin=Math.max(view.W/bw,view.H/bh);
+  if(view.k<kMin) view.k=kMin;
+  var loX=view.W-bx1*view.k, hiX=-bx0*view.k;
+  view.x=loX<=hiX?Math.min(hiX,Math.max(loX,view.x)):(loX+hiX)/2;
+  var loY=view.H-by1*view.k, hiY=-by0*view.k;
+  view.y=loY<=hiY?Math.min(hiY,Math.max(loY,view.y)):(loY+hiY)/2;
+}
+function applyView(){
+  if(state.city) clampTileView(state.city);
+  setTransformOnly();
+  if (!state.city || !mapLayers) return;
+  var c=state.city, k=view.k, base=view.baseK||k, zoom=k/base;
+  if(c.lineEls) for(var le=0;le<c.lineEls.length;le++) c.lineEls[le].el.setAttribute("stroke-width",String(c.lineEls[le].base/k));
+  if(state.routeEls) for(var re=0;re<state.routeEls.length;re++) state.routeEls[re].el.setAttribute("stroke-width",String(state.routeEls[re].base/k));
+  var rN = (zoom>=1.6 || c.raw.stations.length<=90) ? 2.2/k : 0;
+  var rI = zoom>=1.6 ? 3.0/k : 2.6/k;
+  for (var i=0;i<c.stationEls.length;i++){
+    var el=c.stationEls[i], inter=c.stationLines[i].length>1;
+    el.setAttribute("r",String(inter ? rI : rN));
+    el.setAttribute("stroke-width",String(1.4/k));
+    el.style.display=(!inter && rN===0)?"none":"";
+  }
+  var routeLabels=state.routeLabels || new Set();
+  var showAll=zoom>=2.5 || c.raw.stations.length<=90, showInter=zoom>=1.45 || c.raw.stations.length<=90;
+  for (var hid=0;hid<c.labelEls.length;hid++) c.labelEls[hid].style.display="none";
+  var items=[];
+  for (var j=0;j<c.labelEls.length;j++){
+    var linesN=c.stationLines[j].length;
+    var pr = routeLabels.has(j)?3 : linesN>=3?2 : linesN>=2?1:0;
+    if (pr===0 && !showAll) continue;
+    if (pr===1 && !showInter) continue;
+    if (pr===2 && !showInter && zoom<1.05) continue;
+    var sx=view.x+projectCity(c).px[j]*k, sy=view.y+projectCity(c).py[j]*k;
+    if (sx<14||sx>view.W-14||sy<14||sy>view.H-14) continue;
+    items.push([pr,j,sx,sy]);
+  }
+  items.sort(function(a,b){ return b[0]-a[0] || a[1]-b[1]; });
+  var placed=[];
+  for (var q=0;q<items.length;q++){
+    var pr=items[q][0], st=items[q][1], sx2=items[q][2], sy2=items[q][3];
+    var name=stationName(c,st), w=name.length*9.6, h=11;
+    var box={x:sx2-w/2-2,y:sy2-8-h,w:w+4,h:h+2};
+    var hit=false;
+    for (var z=0;z<placed.length;z++){ var p=placed[z]; if(!(box.x>p.x+p.w||box.x+box.w<p.x||box.y>p.y+p.h||box.y+box.h<p.y)){hit=true;break;} }
+    if (hit && pr<3){ c.labelEls[st].style.display="none"; continue; }
+    placed.push(box);
+    c.labelEls[st].style.display="";
+    c.labelEls[st].setAttribute("font-size",String(9.5/k));
+    c.labelEls[st].setAttribute("fill",pr===3?"#111":"#252a33");
+    c.labelEls[st].setAttribute("font-weight",pr===3?"750":"600");
+    c.labelEls[st].setAttribute("stroke","#fbf8f1");
+    c.labelEls[st].setAttribute("stroke-width",String(2.2/k));
+    c.labelEls[st].setAttribute("paint-order","stroke");
+    c.labelEls[st].setAttribute("x",String(projectCity(c).px[st]));
+    c.labelEls[st].setAttribute("y",String(projectCity(c).py[st]-7/k));
+  }
+}
+function drawRoute(){
+  if (!mapLayers || !state.city) return;
+  var g=mapLayers.route; g.innerHTML="";
+  state.routeEls=[];
+  var r=state.routes && state.routes[state.sel];
+  state.routeStations=new Set(); state.routeLabels=new Set();
+  if (!r) { applyView(); return; }
+  var c=state.city, proj=projectCity(c), k=view.k;
+  for (var i=0;i<r.legs.length;i++){
+    var leg=r.legs[i];
+    if (leg.kind !== "ride") continue;
+    var d="";
+    for (var j=0;j<leg.stations.length;j++){
+      var st=c.stopStation[leg.stations[j]];
+      d += (j?" L":"M")+proj.px[st]+" "+proj.py[st];
+      state.routeStations.add(st);
+      if (j===0 || j===leg.stations.length-1) state.routeLabels.add(st);
+    }
+    var halo=document.createElementNS("http://www.w3.org/2000/svg","path");
+    halo.setAttribute("d",d); halo.setAttribute("fill","none"); halo.setAttribute("stroke","#fff");
+    halo.setAttribute("stroke-width",String(9/k)); halo.setAttribute("stroke-linecap","round"); halo.setAttribute("stroke-linejoin","round");
+    halo.setAttribute("opacity","0.9"); g.appendChild(halo); state.routeEls.push({el:halo,base:9});
+    var core=document.createElementNS("http://www.w3.org/2000/svg","path");
+    core.setAttribute("d",d); core.setAttribute("fill","none"); core.setAttribute("stroke","#191c22");
+    core.setAttribute("stroke-width",String(4.4/k)); core.setAttribute("stroke-linecap","round"); core.setAttribute("stroke-linejoin","round");
+    g.appendChild(core); state.routeEls.push({el:core,base:4.4});
+  }
+  // endpoints
+  var ends=[];
+  if (state.from!=null) { ends.push([state.from,"起","#191c22"]); state.routeLabels.add(state.from); }
+  if (state.to!=null) { ends.push([state.to,"终","#c8102e"]); state.routeLabels.add(state.to); }
+  for (var e=0;e<ends.length;e++){
+    var st2=ends[e][0];
+    var circ=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    circ.setAttribute("cx",proj.px[st2]); circ.setAttribute("cy",proj.py[st2]);
+    circ.setAttribute("r",String(11/k)); circ.setAttribute("fill",ends[e][2]);
+    circ.setAttribute("stroke","#fff"); circ.setAttribute("stroke-width",String(2.2/k));
+    g.appendChild(circ);
+    var t=document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x",proj.px[st2]); t.setAttribute("y",proj.py[st2]); t.setAttribute("text-anchor","middle");
+    t.setAttribute("dominant-baseline","central"); t.setAttribute("font-size",String(9/k)); t.setAttribute("fill","#fff"); t.setAttribute("font-weight","700");
+    t.textContent=ends[e][1]; g.appendChild(t);
+  }
+  applyView();
+}
+function zoomAt(sx,sy,factor){
+  var k0=view.k, k=Math.max(view.baseK*0.55, Math.min(view.baseK*8, k0*factor));
+  var wx=(sx-view.x)/k0, wy=(sy-view.y)/k0;
+  view.k=k; view.x=sx-wx*k; view.y=sy-wy*k;
+  applyView();
+}
+function nearestStation(px,py){
+  var c=state.city; if(!c) return null;
+  var proj=projectCity(c), best=null, bd=16*16;
+  for (var i=0;i<proj.px.length;i++){
+    var sx=view.x+proj.px[i]*view.k, sy=view.y+proj.py[i]*view.k;
+    var dx=sx-px, dy=sy-py, d=dx*dx+dy*dy;
+    if (d<bd){ bd=d; best=i; }
+  }
+  return best;
+}
+function localPt(e){
+  var r=$("mapWrap").getBoundingClientRect();
+  return {x:e.clientX-r.left,y:e.clientY-r.top};
+}
+
+/* ---------------- UI ---------------- */
+function setHint(text){ $("hint").textContent=text; }
+function renderTrip(){
+  var c=state.city;
+  $("fromBtn").innerHTML='<i>起点</i><b class="'+(state.from==null?"empty":"")+'">'+(state.from==null?"选择起点站":esc(stationName(c,state.from)))+'</b>';
+  $("toBtn").innerHTML='<i>终点</i><b class="'+(state.to==null?"empty":"")+'">'+(state.to==null?"选择终点站":esc(stationName(c,state.to)))+'</b>';
+}
+function renderFacts(){
+  var c=state.city, q=c.raw.quality;
+  $("cityFacts").innerHTML='<h3>'+esc(c.raw.name)+' · '+esc(c.raw.region||'')+' · 数据概览</h3>'+
+    '<div class="factgrid">'+
+    '<div class="fact"><b>'+q.lines+'</b><span>运营线路</span></div>'+
+    '<div class="fact"><b>'+q.stations+'</b><span>车站</span></div>'+
+    '<div class="fact"><b>'+Math.round(q.fareCoverage*100)+'%</b><span>官方票价覆盖</span></div>'+
+    '</div>'+
+    '<div class="factnote">首末班 '+q.timetables+' 条 · 数据日期 '+esc(c.raw.dataDate||"—")+' · 票价单位 '+esc(c.raw.currency||"CNY")+' · '+((c.raw.tiles&&c.raw.tiles.length)||c.raw.tileMosaic?'含 OSM z'+(c.raw.tileZ||10)+' 离线底图':'矢量底图（未内置 OSM 瓦片）')+'。<br>含地铁、市域铁路、轻轨、单轨/有轨电车等类型（线路标签可查看）。官方 OD 票价缺失的起终点显示“暂无票价”，不使用估算值冒充官方。</div>';
+}
+function renderCityBtn(){ $("cityBtn").innerHTML=esc(state.city.raw.name)+' <span>▾</span>'; }
+function setCity(id){
+  var c=getCity(id); if(!c) return;
+  $("mapTag").textContent=c.raw.name+" · "+c.raw.quality.lines+" 条线路";
+  state.cityId=id; state.city=c; state.from=null; state.to=null; state.routes=[]; state.sel=0; state.routeStations=null;
+  try{ localStorage.setItem("cm_city",id); }catch(e){}
+  var hasTiles=!!((c.raw.tiles&&c.raw.tiles.length)||c.raw.tileMosaic);
+  var at=$("osmAttr"), tb=$("tileBtn");
+  if(at){ at.style.display=hasTiles?"":"none"; if(hasTiles) at.textContent="© OpenStreetMap contributors · 离线底图 z"+(c.raw.tileZ||10); }
+  if(tb){ tb.style.display=hasTiles?"":"none"; tb.classList.toggle("on",hasTiles&&state.tilesOn); }
+  renderCityBtn(); renderTrip(); renderFacts(); renderResult(); buildMap(c);
+  setHint("轻点地图车站选择起点");
+}
+function selectStation(kind, si){
+  if (kind==="from"){
+    if (state.to===si) state.to=null;
+    state.from=si;
+  } else {
+    if (state.from===si) state.from=null;
+    state.to=si;
+  }
+  closeSheet(); renderTrip();
+  if (state.from!=null && state.to!=null) plan();
+  else { state.routes=[]; state.sel=0; renderResult(); drawRoute(); }
+}
+function plan(){
+  renderTrip();
+  if (state.from!=null && state.to!=null && state.from===state.to){ state.routes=[]; state.sel=0; renderResult(); drawRoute(); return; }
+  if (state.from==null || state.to==null) return;
+  var c=state.city;
+  var routes=computeRoutes(c,state.from,state.to,state.dep);
+  if (!routes.length){ state.routes=[]; state.sel=0; renderResult(); drawRoute(); return; }
+  // preference order
+  var pref=state.pref;
+  if (pref==="fare"){
+    routes.sort(function(a,b){ var av=a.fare?a.fare.value:1e9, bv=b.fare?b.fare.value:1e9; return av!==bv?av-bv:(a.plan.ok?0:1)-(b.plan.ok?0:1); });
+  } else {
+    routes.sort(function(a,b){
+      var ap=a.plan.ok?0:1, bp=b.plan.ok?0:1;
+      if (ap!==bp) return ap-bp;
+      return a.cost-b.cost;
+    });
+  }
+  var wanted=pref==="fare"?null:pref==="few"?"few":pref==="stops"?"stops":pref==="walk"?"walk":"fast";
+  var idx=wanted?routes.findIndex(function(r){return r.mode===wanted;}):0;
+  state.routes=routes; state.sel=idx>=0?idx:0;
+  renderResult(); drawRoute(); setHint("轻点其他车站可更换终点");
+}
+function renderResult(){
+  var el=$("result"), c=state.city;
+  if (state.from==null || state.to==null){
+    el.innerHTML='<div class="empty"><b>选择起点和终点</b>，即可计算路线、票价与首末班。<br>也可以直接轻点地图上的车站。</div>';
+    return;
+  }
+  if (state.from===state.to){ el.innerHTML='<div class="empty">起点与终点相同。</div>'; return; }
+  if (!state.routes.length){ el.innerHTML='<div class="empty">当前城市内没有找到可达路线。<br>可能是站点停运、线路数据不完整，或两地不在同一城市。</div>'; return; }
+  var r=state.routes[state.sel]||state.routes[0];
+  var p=r.plan, fare=r.fare;
+  var totalStops=0, rides=0, transfers=0, dirChanges=0;
+  for (var i=0;i<r.legs.length;i++){
+    if (r.legs[i].kind==="ride"){ totalStops += r.legs[i].stations.length-1; rides++; }
+    else if (!r.legs[i].sameLine) transfers++;
+    else dirChanges++;
+  }
+  var altHtml='<div class="alt">';
+  for (var a=0;a<state.routes.length;a++){
+    var rr=state.routes[a], pp=rr.plan;
+    var label=rr.label;
+    var time=pp.ok?Math.round(pp.total):"—";
+    altHtml+='<button data-alt="'+a+'" class="'+(a===state.sel?"on":"")+'"><b>'+label+'</b>'+(time==="—"?"不可行":time+" 分")+'</button>';
+  }
+  altHtml+='</div>';
+  var unitTxt = c.raw.currency==='HKD' ? 'HK$' : c.raw.currency==='MOP' ? 'MOP$' : '元';
+  var fareHtml = fare ? '<div class="fare"><span class="num">'+(Number.isInteger(fare.value)?fare.value:fare.value.toFixed(1))+'</span><span class="unit">'+esc(unitTxt)+'</span></div>' : '<div class="fare"><span class="num">—</span><span class="unit">票价缺失</span></div>';
+  var sumHtml='<div class="sum">'+(p.ok?'<b>'+fmtDuration(p.total)+'</b><br>预计 '+fmtMin(p.arrive)+' 到达':'<b>该时刻不可行</b><br>末班车已过')+'<br>'+totalStops+' 站 · '+((transfers||dirChanges)?((transfers?transfers+' 次换乘':'')+(transfers&&dirChanges?' · ':'')+(dirChanges?dirChanges+' 次同站换向':'')):'直达')+'</div>';
+  var missingTime=r.legs.some(function(l){return l.kind==='ride' && !l.window;});
+  var firstRidePart=null;
+  for(var fp=0;fp<p.parts.length;fp++){ if(p.parts[fp].leg && p.parts[fp].leg.kind==='ride'){ firstRidePart=p.parts[fp]; break; } }
+  var firstWin=firstRidePart?firstRidePart.leg.window:null;
+  var beforeFirst=!!(p.ok && firstWin && firstWin.first!=null && p.dep < firstWin.first);
+  var badges=[];
+  badges.push([fare?'ok':'warn', fare?'官方票价':'暂无官方票价']);
+  badges.push(['', esc(c.raw.currency||'CNY')]);
+  if(missingTime) badges.push(['warn','部分时刻缺失']);
+  if(!p.ok) badges.push(['warn','末班已过']);
+  else if(beforeFirst) badges.push(['info','首班前']);
+  else badges.push(['ok','运营时段内']);
+  if(beforeFirst) badges.push(['info','首班 '+fmtMin(firstWin.first)]);
+  var badgeHtml='<div class="badges">'+badges.map(function(b){return '<span class="badge '+b[0]+'">'+b[1]+'</span>';}).join('')+'</div>';
+  var warn="";
+  if (!p.ok){
+    var inf=p.infeasible;
+    warn='<div class="warn">按 '+fmtMin(p.dep)+' 出发，'+esc(lineName(c,inf.leg.line))+' 在「'+esc(stationName(c,c.stopStation[inf.leg.from]))+'」的末班车（'+fmtMin(inf.last)+'）已过，无法完成行程。请提前出发或选择其他方案。</div>';
+  }
+  var legsHtml='<div class="legs">';
+  for (var li=0;li<r.legs.length;li++){
+    var leg=r.legs[li];
+    if (leg.kind==="transfer"){
+      var tst=stationName(c,c.stopStation[leg.from]);
+      var nextLine='';
+      if (li+1<r.legs.length && r.legs[li+1].kind==='ride') nextLine='换乘 '+lineName(c,r.legs[li+1].line)+'，';
+      legsHtml+='<div class="leg trans"><div class="rail"></div><div class="body">'+ (leg.sameLine?'在 '+esc(tst)+' 同站换向，等待下一班列车':nextLine+'步行约 '+Math.max(1,Math.round(leg.sec/60))+' 分钟（'+esc(tst)+'）') +'</div></div>';
+      continue;
+    }
+    var board=null, waitTxt="";
+    if (p.ok){
+      for (var pi=0;pi<p.parts.length;pi++){ if(p.parts[pi].leg===leg){ board=p.parts[pi].board; break; } }
+    }
+    var dir=leg.window&&leg.window.destName?'往 '+esc(leg.window.destName):"";
+    var first=leg.window&&leg.window.first!=null?fmtMin(leg.window.first):"—";
+    var last=leg.window&&leg.window.last!=null?fmtMin(leg.window.last):"—";
+    legsHtml+='<div class="leg"><div class="rail" style="background:'+lineColor(c,leg.line)+'"></div><div class="body">'+
+      '<div class="head">'+lineChip(c,leg.line)+'<span class="route">'+esc(stationName(c,c.stopStation[leg.stations[0]]))+' → '+esc(stationName(c,c.stopStation[leg.stations[leg.stations.length-1]]))+'</span></div>'+
+      '<div class="meta">'+ (leg.stations.length-1) +' 站 · 约 '+Math.round(leg.ride)+' 分钟'+(dir?' · '+dir:'')+(modeName(c,leg.line)!=='地铁'?' · '+modeName(c,leg.line):'')+'</div>'+
+      '<div class="times">'+(board!=null?'上车 '+fmtMin(board)+' · ':'')+'首 '+first+' / 末 '+last+'</div>'+
+      '<details class="stopsbox"><summary>逐站查看</summary><ol>';
+    for (var sj=0;sj<leg.stations.length;sj++) legsHtml+='<li>'+esc(stationName(c,c.stopStation[leg.stations[sj]]))+'</li>';
+    legsHtml+='</ol></details></div></div>';
+  }
+  legsHtml+='</div>';
+  var latestHtml='';
+  if(p.ok && p.latest!=null) latestHtml+='<div class="note">最晚约 '+fmtMin(p.latest)+' 从起点出发可赶上全程末班车。候车按 3 分钟估算。</div>';
+  if(beforeFirst) latestHtml+='<div class="note">当前早于首班车 '+fmtMin(firstWin.first)+'，需在站外/站厅等候约 '+fmtDuration(firstWin.first-p.dep)+'；实际首班时刻以车站公告为准。</div>';
+  el.innerHTML='<div class="fareline">'+fareHtml+sumHtml+'</div>'+badgeHtml+altHtml+warn+legsHtml+latestHtml+
+    '<div class="note">票价来自该城市官方 OD 票价表；首末班来自内置时刻数据。实际以车站公告为准。</div>';
+  var bs=el.querySelectorAll('[data-alt]');
+  for (var b=0;b<bs.length;b++) bs[b].onclick=function(){ state.sel=Number(this.getAttribute("data-alt")); renderResult(); drawRoute(); };
+}
+
+/* ---------------- sheets ---------------- */
+function openSheet(name, target){
+  closeSheet();
+  state.sheet=name; state.sheetTarget=target||null;
+  $("mask").classList.add("on");
+  $(name).classList.add("on");
+  if (name==="citySheet"){ $("cityQ").value=""; renderCityList(""); setTimeout(function(){$("cityQ").focus();},50); }
+  if (name==="stationSheet"){ $("stationTitle").textContent=(target==="from"?"选择起点":"选择终点")+" · "+state.city.raw.name; $("stationQ").value=""; renderStationList(""); setTimeout(function(){$("stationQ").focus();},50); }
+  if (name==="infoSheet"){ renderInfo(); }
+  if (name==="timeSheet"){ renderTimePicker(); }
+}
+function closeSheet(){
+  $("mask").classList.remove("on");
+  ["citySheet","stationSheet","infoSheet","timeSheet"].forEach(function(x){ $(x).classList.remove("on"); });
+  state.sheet=null;
+}
+function renderCityList(q){
+  var query=(q||"").trim().toLowerCase();
+  var arr=DB.cities.slice().sort(function(a,b){ return a.name.localeCompare(b.name,"zh-Hans-CN"); });
+  var html="", lastRegion="";
+  for (var i=0;i<arr.length;i++){
+    var c=arr[i];
+    if (query && !(c.name.toLowerCase().includes(query)||c.en.toLowerCase().includes(query)||c.py.toLowerCase().includes(query)||c.region.toLowerCase().includes(query))) continue;
+    if (!query && c.region!==lastRegion){ html+='<div class="group">'+esc(c.region)+'</div>'; lastRegion=c.region; }
+    var ql=c.quality;
+    html+='<div class="item" data-city="'+c.id+'"><div><div class="nm">'+esc(c.name)+' <span style="font-weight:400;color:#8a8f98;font-size:10px">'+esc(c.en)+'</span></div>'+
+      '<div class="sub">'+ql.lines+' 线 · '+ql.stations+' 站 · 票价覆盖 '+Math.round(ql.fareCoverage*100)+'%</div></div>'+
+      '<div class="right">'+(c.id===state.cityId?'当前':'选择')+'</div></div>';
+  }
+  var miss=MISSING_CITIES.filter(function(n){ return !query || n.indexOf(query)>=0 || query.indexOf(n)>=0; });
+  if (miss.length) html+='<div class="empty" style="padding:12px 10px;color:#a6aab2">未收录：'+miss.join("、")+'（暂无可靠完整数据，未生成占位线路）</div>';
+  $("cityList").innerHTML=html||'<div class="empty" style="padding:20px">没有匹配的城市</div>';
+  var items=$("cityList").querySelectorAll("[data-city]");
+  for (var j=0;j<items.length;j++) items[j].onclick=function(){ setCity(this.getAttribute("data-city")); closeSheet(); };
+}
+function renderStationList(q){
+  var c=state.city, query=(q||"").trim().toLowerCase();
+  var arr=c.search.filter(function(s){ return !query || s.n.includes(query) || s.e.includes(query); });
+  arr.sort(function(a,b){ return a.s-b.s; });
+  var html="";
+  for (var i=0;i<arr.length && i<1200;i++){
+    var s=arr[i], st=c.raw.stations[s.s];
+    html+='<div class="item" data-st="'+s.s+'"><div><div class="nm">'+esc(st[0])+' <span style="font-weight:400;color:#8a8f98;font-size:10px">'+esc(st[1]||"")+'</span></div>'+
+      '<div class="lines">'+(c.stationLines[s.s].map(function(li){return lineChip(c,li);}).join(""))+'</div></div>'+
+      '<div class="right">'+(c.stationLines[s.s].length>1?'换乘':'')+'</div></div>';
+  }
+  $("stationList").innerHTML=html||'<div class="empty" style="padding:20px">没有匹配的车站</div>';
+  var items=$("stationList").querySelectorAll("[data-st]");
+  for (var j=0;j<items.length;j++) items[j].onclick=function(){ selectStation(state.sheetTarget, Number(this.getAttribute("data-st"))); };
+}
+function renderInfo(){
+  var totals={cities:DB.cities.length,lines:0,stations:0,stops:0,tt:0,fares:0};
+  DB.cities.forEach(function(c){ totals.lines+=c.quality.lines; totals.stations+=c.quality.stations; totals.stops+=c.quality.stops; totals.tt+=c.quality.timetables; });
+  var rows=DB.cities.slice().sort(function(a,b){return a.name.localeCompare(b.name,"zh-Hans-CN");}).map(function(c){
+    return '<tr><td>'+esc(c.name)+'</td><td>'+c.quality.lines+' 线 / '+c.quality.stations+' 站<br>票价 '+Math.round(c.quality.fareCoverage*100)+'% · 时刻 '+c.quality.timetables+'</td></tr>';
+  }).join("");
+  var missing=MISSING_CITIES.join("、")+"等（尚未纳入；不生成伪造数据）";
+  $("infoBody").innerHTML='<h2>中国地铁 · 离线导航</h2>'+
+    '<p>单文件、零网络依赖。所有城市数据库、线路、站点、票价与首末班均内置于本 HTML。</p>'+
+    '<h3>版本与规模</h3><table>'+
+    '<tr><td>软件版本</td><td>'+APP_VERSION+'</td></tr>'+
+    '<tr><td>数据版本</td><td>'+esc(DATA_VERSION)+'</td></tr>'+
+    '<tr><td>收录城市/地区</td><td>'+totals.cities+'</td></tr>'+
+    '<tr><td>线路 / 车站 / Stop</td><td>'+totals.lines+' / '+totals.stations+' / '+totals.stops+'</td></tr>'+
+    '<tr><td>首末班记录</td><td>'+totals.tt+'</td></tr>'+
+    '</table>'+
+    '<h3>覆盖说明</h3><p>已收录城市：'+DB.cities.map(function(c){return esc(c.name);}).join("、")+'。</p>'+
+    '<p>尚未收录：'+esc(missing)+'。在补到可核实的官方数据前，本项目不填充占位线路或伪造成站点。</p>'+
+    '<h3>数据来源</h3><p>城市拓扑、票价、首末班来自 Open Metro 整理的中国城市地铁数据（其来源为各城市地铁运营方/官方路径规划器/开放数据），上海首末班与票价亦与上海地铁官网一致。数据日期见各城市卡片。</p>'+
+    '<p>票价是抓取时点的官方 OD 票价，不代表未来政策；首末班为“车站 + 方向 + 终点”粒度，部分城市缺失时按估算候车处理。实际以车站公告为准。</p>'+
+    '<h3>城市明细</h3><table><tr><td><b>城市</b></td><td><b>规模 / 覆盖</b></td></tr>'+rows+'</table>'+
+    '<h3>已知限制</h3><ul>'+
+    '<li>换乘步行与候车为数据值/默认值，部分城市有误差。</li>'+
+    '<li>票价表中缺失的 OD 对显示“暂无票价”，不做估算。</li>'+
+    '<li>未实现实时运营、临时停运、节假日特殊图。</li>'+
+    '<li>地图为本地 SVG + 内置 OSM z10 离线底图；放大后底图为低分辨率，不会发起在线瓦片请求。</li>'+
+    '</ul>'+
+    '<p style="color:#9aa0a8">数据更新流程与来源清单见仓库 DATA_SOURCES.md；测试结果见 TEST_REPORT.md。</p>';
+}
+
+/* ---------------- events ---------------- */
+function setTiles(on){
+  if(!state.city || (!state.city.raw.tiles && !state.city.raw.tileMosaic)) return;
+  state.tilesOn=on;
+  if(mapLayers && mapLayers.tiles) mapLayers.tiles.style.display=on?"":"none";
+  var btn=$("tileBtn"); if(btn) btn.classList.toggle("on",on);
+  var at=$("osmAttr"); if(at) at.classList.toggle("off",!on);
+}
+function bind(){
+  $("cityBtn").onclick=function(){ openSheet("citySheet"); };
+  $("infoBtn").onclick=function(){ openSheet("infoSheet"); };
+  $("fromBtn").onclick=function(){ openSheet("stationSheet","from"); };
+  $("toBtn").onclick=function(){ openSheet("stationSheet","to"); };
+  $("swapBtn").onclick=function(){ var t=state.from; state.from=state.to; state.to=t; renderTrip(); if(state.from!=null&&state.to!=null) plan(); else {renderResult();drawRoute();} };
+  $("planBtn").onclick=plan;
+  $("pref").onchange=function(){ state.pref=this.value; try{localStorage.setItem("cm_pref",this.value);}catch(e){} plan(); };
+  $("nowBtn").onclick=function(){ state.dep=new Date(); syncTimeControls(); plan(); };
+  $("timePickBtn").onclick=openTimePicker;
+  $("depInput").onchange=function(){ var d=parseDateInput(this.value); if(d){ state.dep=d; syncTimeControls(); plan(); } };
+  document.getElementById("tpDate").onchange=function(){ var p=this.value.split("-").map(Number); if(p.length===3&&!p.some(isNaN)){ picker.date=new Date(p[0],p[1]-1,p[2]); renderTimePicker(); } };
+  document.getElementById("tpNow").onclick=function(){ picker.date=new Date(); picker.hour=picker.date.getHours(); picker.minute=picker.date.getMinutes(); renderTimePicker(); };
+  document.getElementById("tpOk").onclick=applyTimePicker;
+  $("cityQ").oninput=function(){ renderCityList(this.value); };
+  $("stationQ").oninput=function(){ renderStationList(this.value); };
+  $("mask").onclick=closeSheet;
+  var closers=document.querySelectorAll("[data-close]");
+  for(var i=0;i<closers.length;i++) closers[i].onclick=closeSheet;
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeSheet(); });
+  $("zin").onclick=function(){ zoomAt(view.W/2,view.H/2,1.45); };
+  $("zout").onclick=function(){ zoomAt(view.W/2,view.H/2,1/1.45); };
+  $("zfit").onclick=function(){ fitView(); };
+  $("tileBtn").onclick=function(){ setTiles(!state.tilesOn); };
+  // pointer drag/zoom
+  var pointers=new Map(), drag=null, start=null, moved=0, pinch=null;
+  var svg=$("map");
+  svg.addEventListener("pointerdown",function(e){
+    svg.setPointerCapture(e.pointerId);
+    var p=localPt(e); pointers.set(e.pointerId,p);
+    if(pointers.size===1){ drag=true; moved=0; start=p; svg.classList.add("grabbing"); }
+    else if(pointers.size===2){
+      var a=Array.from(pointers.values()); pinch={d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),k:view.k,x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2,vx:view.x,vy:view.y}; drag=false;
+    }
+  });
+  svg.addEventListener("pointermove",function(e){
+    var p=localPt(e);
+    if(pointers.has(e.pointerId)){
+      var prev=pointers.get(e.pointerId); pointers.set(e.pointerId,p);
+      if(pointers.size===2 && pinch){
+        var a=Array.from(pointers.values()); var d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
+        var mid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};
+        var k=Math.max(view.baseK*0.55,Math.min(view.baseK*8,pinch.k*d/(pinch.d||1)));
+        var wx=(pinch.x-pinch.vx)/pinch.k, wy=(pinch.y-pinch.vy)/pinch.k;
+        view.k=k; view.x=mid.x-wx*k; view.y=mid.y-wy*k; applyView(); return;
+      }
+      if(drag){
+        var dx=p.x-prev.x, dy=p.y-prev.y; moved+=Math.abs(dx)+Math.abs(dy);
+        view.x+=dx; view.y+=dy; clampTileView(state.city); setTransformOnly();
+      }
+    } else {
+      var s=nearestStation(p.x,p.y), tip=$("hoverTip");
+      if(s==null){ tip.style.display="none"; }
+      else { tip.textContent=stationName(state.city,s)+" · "+state.city.stationLines[s].map(function(l){return lineName(state.city,l);}).join(" / "); tip.style.display="block"; tip.style.left=(p.x+12)+"px"; tip.style.top=(p.y-10)+"px"; }
+    }
+  });
+  function endPointer(e){
+    var p=pointers.get(e.pointerId); pointers.delete(e.pointerId);
+    if(pointers.size<2) pinch=null;
+    if(pointers.size===0){
+      svg.classList.remove("grabbing");
+      if(drag && moved<9 && p){
+        var s=nearestStation(p.x,p.y);
+        if(s!=null){
+          if(state.from==null || (state.from!=null&&state.to!=null)) selectStation("from",s);
+          else selectStation("to",s);
+        }
+      }
+      drag=false;
+    }
+  }
+  svg.addEventListener("pointerup",endPointer);
+  svg.addEventListener("pointercancel",function(e){ pointers.delete(e.pointerId); pinch=null; drag=false; svg.classList.remove("grabbing"); });
+  svg.addEventListener("pointerleave",function(){ $("hoverTip").style.display="none"; });
+  $("mapWrap").addEventListener("wheel",function(e){ e.preventDefault(); var p=localPt(e); zoomAt(p.x,p.y,Math.exp(-e.deltaY*0.0016)); },{passive:false});
+  window.addEventListener("resize",function(){ if(state.city){ view.W=$("mapWrap").clientWidth||360; view.H=$("mapWrap").clientHeight||300; fitView(); } });
+}
+
+function init(){
+  var savedCity=null, savedPref=null;
+  try{ savedCity=localStorage.getItem("cm_city"); savedPref=localStorage.getItem("cm_pref"); }catch(e){}
+  if(savedPref) { state.pref=savedPref; $("pref").value=savedPref; }
+  state.dep=new Date();
+  syncTimeControls();
+  bind();
+  setCity(savedCity && byId.has(savedCity) ? savedCity : "cn-shanghai");
+  $("footer").textContent="软件 "+APP_VERSION+" · 数据 "+DATA_VERSION+" · 内置 "+DB.cities.length+" 个城市/地区 · 完全离线";
+}
+init();
+</script>
+</body>
+</html>

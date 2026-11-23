@@ -1,0 +1,135 @@
+{
+  "shots": [
+    "01-home-shanghai.png",
+    "02-city-sheet.png",
+    "03-station-search.png",
+    "04-route-shanghai.png",
+    "05-branch-direction-change.png",
+    "06-late-warning.png",
+    "07-route-beijing.png",
+    "08-data-info.png",
+    "09-tiles-off.png",
+    "13-out-of-hours.png",
+    "14-time-picker.png",
+    "11-non-shanghai-zoom.png",
+    "12-small-zoom-drag.png",
+    "10-mobile.png"
+  ],
+  "checks": [
+    {
+      "name": "首页初始化",
+      "ok": true
+    },
+    {
+      "name": "上海 OSM 底图",
+      "ok": true,
+      "detail": {
+        "tiles": 1,
+        "tileZ": 10,
+        "attr": "block"
+      }
+    },
+    {
+      "name": "城市列表 37",
+      "ok": true
+    },
+    {
+      "name": "站点搜索",
+      "ok": true
+    },
+    {
+      "name": "上海路线与票价",
+      "ok": true,
+      "detail": "6元\n1 小时 9 分\n预计 20:39 到达\n21 站 · 1 次换乘\n官方票价\nCNY\n运营时段内\n最快\n69 分\n少步行\n93 分\n少站\n75 分\n1号线\n莘庄 → 徐家汇\n7 站 · 约 18"
+    },
+    {
+      "name": "支线同站换向显示",
+      "ok": true,
+      "detail": "5元\n43 分钟\n预计 10:43 到达\n10 站 · 1 次同站换向\n官方票价\nCNY\n运营时段内\n最快\n43 分\n11号线\n花桥 → 嘉定新城\n7 站 · 约 24 分钟 · 往 迪士尼\n上车 10:03 · 首 05:37 / 末 2"
+    },
+    {
+      "name": "末班车警告显示",
+      "ok": true
+    },
+    {
+      "name": "北京路线与 OSM 底图",
+      "ok": true,
+      "detail": {
+        "text": "4元\n30 分钟\n预计 10:30 到达\n10 站 · 1 次换乘\n官方票价\nCNY\n运营时段内\n最快\n30 分\n少站\n38 分\n2号线\n西直门 → 建国门\n8",
+        "tiles": 1
+      }
+    },
+    {
+      "name": "数据说明",
+      "ok": true
+    },
+    {
+      "name": "底图开关",
+      "ok": true,
+      "detail": {
+        "off": "none",
+        "on": "inline"
+      }
+    },
+    {
+      "name": "运营时间外徽章有文字",
+      "ok": true,
+      "detail": {
+        "texts": [
+          "官方票价",
+          "CNY",
+          "首班前",
+          "首班 05:30"
+        ],
+        "input": true
+      }
+    },
+    {
+      "name": "时间选择器可打开",
+      "ok": true,
+      "detail": {
+        "on": true,
+        "hours": 24,
+        "minutes": 12
+      }
+    },
+    {
+      "name": "点击选择时间生效",
+      "ok": true,
+      "detail": {
+        "h": 12,
+        "m": 30,
+        "val": "2026-11-23T12:30"
+      }
+    },
+    {
+      "name": "非上海深度缩放不露白",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "k": 6264,
+        "base": 783
+      }
+    },
+    {
+      "name": "少许放大拖动线路可见",
+      "ok": true,
+      "detail": {
+        "paths": 0,
+        "lines": 28,
+        "tiles": 1
+      }
+    },
+    {
+      "name": "移动端无错误",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "页面无错误",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "errors": []
+}
