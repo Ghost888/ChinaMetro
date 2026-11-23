@@ -60,6 +60,16 @@ h2{font-size:26px;letter-spacing:-.6px;margin:0 0 8px}h3{font-size:16px;margin:0
 .chip{font-size:12px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 9px;color:#4b5058}
 .note{font-size:12px;color:var(--sub);margin-top:14px}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btn-red{background:var(--accent);color:#fff;box-shadow:0 12px 26px -16px #7a0b1c}
+.project-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+.project-card{display:block;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;color:var(--ink);box-shadow:0 10px 30px -26px rgba(30,25,15,.5);transition:transform .15s ease,box-shadow .15s ease}
+.project-card:hover{text-decoration:none;transform:translateY(-2px);box-shadow:0 18px 40px -26px rgba(30,25,15,.55)}
+.project-card img{display:block;width:100%;height:auto;aspect-ratio:1280/900;object-fit:cover;border-bottom:1px solid var(--line);background:#eee}
+.project-card .pcbody{padding:15px 16px 16px}
+.project-card h3{margin:0 0 4px;font-size:17px}
+.project-card p{margin:0;color:#5b6068;font-size:13px;line-height:1.55}
+.project-card .go{display:inline-flex;align-items:center;gap:6px;margin-top:11px;font-size:12.5px;font-weight:800;color:var(--accent)}
+@media(max-width:820px){.project-grid{grid-template-columns:1fr}}
 footer{border-top:1px solid var(--line);padding:24px 0 34px;color:var(--sub);font-size:12px}
 @media(max-width:820px){.hero{grid-template-columns:1fr;padding-top:32px;gap:26px}h1{font-size:34px}.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.nav-links{display:none}}
 </style>
@@ -69,7 +79,8 @@ footer{border-top:1px solid var(--line);padding:24px 0 34px;color:var(--sub);fon
 <nav class="nav">
   <a class="brand" href="/ChinaMetro/"><span class="logo">M</span><span>中国地铁 · 离线导航</span></a>
   <div class="nav-links">
-    <a href="ChinaMetro.html">打开应用</a>
+    <a href="ChinaMetro.html">全国版</a>
+    <a href="shanghai/">上海专项版</a>
     <a href="#features">功能</a>
     <a href="#cities">覆盖城市</a>
     <a href="https://github.com/Ghost888/ChinaMetro">GitHub</a>
@@ -82,8 +93,8 @@ footer{border-top:1px solid var(--line);padding:24px 0 34px;color:var(--sub);fon
     <h1>中国地铁<br><span>离线导航</span></h1>
     <p class="lead">37 个城市/地区、339 条线路、6464 个车站。路线规划、官方 OD 票价、首末班与末班车校验，以及 OSM z10 离线底图，全部内置在一个 HTML 文件里。</p>
     <div class="cta">
-      <a class="btn btn-main" href="ChinaMetro.html">打开离线导航 →</a>
-      <a class="btn btn-ghost" href="https://github.com/Ghost888/ChinaMetro">查看源码</a>
+      <a class="btn btn-main" href="ChinaMetro.html">全国版 · 打开即用 →</a>
+      <a class="btn btn-red" href="shanghai/">上海专项版 · 打开即用 →</a>
     </div>
     <div class="meta">约 15 MB · 支持桌面与手机 · 断网可用 · 不需要安装</div>
     <div class="stats">
@@ -95,6 +106,21 @@ footer{border-top:1px solid var(--line);padding:24px 0 34px;color:var(--sub);fon
   </div>
   <div class="hero-art"><img src="assets/screenshot-desktop.png" alt="中国地铁离线导航桌面界面：上海地铁线路图、起终点和路线结果" width="1280" height="900" loading="eager"></div>
 </header>
+
+<section id="projects">
+  <h2>两个项目，点开就能用</h2>
+  <p class="sub">都是单文件离线页面，不需要安装，也不需要登录。</p>
+  <div class="project-grid">
+    <a class="project-card" href="ChinaMetro.html">
+      <img src="assets/screenshot-desktop.png" alt="中国地铁离线导航界面：全国 37 城地铁线路、路线与票价" width="1280" height="900" loading="lazy">
+      <div class="pcbody"><h3>中国地铁 · 离线导航</h3><p>37 城、339 条线路、6464 个车站；路线、官方 OD 票价、首末班与 OSM 离线底图。</p><span class="go">打开全国版 →</span></div>
+    </a>
+    <a class="project-card" href="shanghai/">
+      <img src="assets/screenshot-shanghai.png" alt="上海地铁新票价计算器界面：上海地铁线路图、票价与路线" width="1280" height="900" loading="lazy">
+      <div class="pcbody"><h3>上海地铁 · 新票价计算器</h3><p>2026.12.1 新票价机制；起终点路线、逐站明细、首末班与末班车校验。</p><span class="go">打开上海专项版 →</span></div>
+    </a>
+  </div>
+</section>
 
 <section id="features">
   <h2>它不是一张静态线路图</h2>
@@ -118,15 +144,7 @@ footer{border-top:1px solid var(--line);padding:24px 0 34px;color:var(--sub);fon
   <p class="note">未收录：常州、东莞、佛山、绍兴、嘉兴、金华、洛阳、南通、芜湖、台州、泉州、三亚、温州等；数据补齐前不做占位。</p>
 </section>
 
-<section id="more">
-  <h2>另一个项目</h2>
-  <p class="sub">上海地铁专项计算器，同样可以离线打开。</p>
-  <div class="card" style="max-width:640px">
-    <h3>上海地铁 · 新票价计算器（2026.12.1）</h3>
-    <p>面向上海的专项版本：2026.12.1 新票价、起终点路线、逐站明细、首末班与末班车校验。与全国版相互独立。</p>
-    <div class="actions" style="margin-top:12px"><a class="btn btn-ghost" href="shanghai/">打开上海专项版 →</a></div>
-  </div>
-</section>
+
 
 <section>
   <h2>数据与限制</h2>
