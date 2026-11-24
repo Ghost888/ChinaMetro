@@ -12,7 +12,7 @@
 
 ## 城市地铁标识
 
-- 界面中的城市地铁标识来自 Wikimedia Commons（含公有领域、CC BY 3.0、CC BY-SA 3.0/4.0 等许可），内嵌后仅用于标识对应的地铁系统，不表示任何隶属或授权关系。
+- 界面中的城市地铁标识来自 Wikimedia Commons 与中英文维基百科（含公有领域、CC BY 3.0、CC BY-SA 3.0/4.0，以及英文维基的 fair use 文件），内嵌后仅用于标识对应的地铁系统，不表示任何隶属或授权关系。
 - 这些标识是各城市地铁运营方的注册商标，商标权归各运营方所有；本项目仅作指称性使用（nominative use）。若权利方要求，可随时移除。
-- 目前 32 个城市/地区使用官方标识；大连、贵阳、昆明、兰州、武汉暂未在可自由使用的来源中找到官方标识文件，回退为「标志色 + 城市名」徽标。补图方式：把 PNG 放到 `assets/logos/<city-id>.png`，再运行 `python tools/embed_logos.py` 重新内嵌。
+- 目前 37 个城市/地区均使用官方标识（逐条来源见 `assets/logos/index.json`）。补图或替换：把 PNG 放到 `assets/logos/<city-id>.png`，在 `index.json` 补一条来源，再运行 `python tools/embed_logos.py` 重新内嵌。
 

@@ -221,5 +221,35 @@
   "license": "Public domain",
   "page": "https://commons.wikimedia.org/wiki/File:Metro_Ligeiro_de_Macau_logo.svg",
   "bytes": 8601
+ },
+ "cn-dalian": {
+  "file": "Logo of Dalian Metro.jpg",
+  "site": "zh",
+  "license": "合理使用",
+  "bytes": 9726
+ },
+ "cn-guiyang": {
+  "file": "GuiyangMetro.png",
+  "site": "zh",
+  "license": "合理使用",
+  "bytes": 19371
+ },
+ "cn-kunming": {
+  "file": "Kunming Metro.svg",
+  "site": "zh",
+  "license": "合理使用",
+  "bytes": 11820
+ },
+ "cn-lanzhou": {
+  "file": "Lanzhou Rail Transit Logo.png",
+  "site": "zh",
+  "license": "合理使用",
+  "bytes": 30325
+ },
+ "cn-wuhan": {
+  "file": "Wuhan Metro logo.png",
+  "site": "en",
+  "license": "Fair use",
+  "bytes": 6403
  }
 }
