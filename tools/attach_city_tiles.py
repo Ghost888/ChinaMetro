@@ -39,7 +39,7 @@ def fetch(url, tries=5):
     for i in range(tries):
         try:
             body = urllib.request.urlopen(req, timeout=30).read()
-            if body[:8] != b"\x89PNG\r\n\x1a\n" or len(body) < 1500:
+            if body[:8] != b"\x89PNG\r\n\x1a\n" or len(body) < 33 or int.from_bytes(body[16:20], "big") != 256:
                 raise ValueError("suspicious tile body (%d bytes)" % len(body))
             return body
         except Exception as e:  # noqa: BLE001
@@ -55,7 +55,7 @@ def build_mosaic(tx0, ty0, tx1, ty1, z, cache_dir):
     for x in range(tx0, tx1 + 1):
         for y in range(ty0, ty1 + 1):
             p = os.path.join(cache_dir, "%d_%d.png" % (x, y))
-            if not (os.path.exists(p) and os.path.getsize(p) > 1500):
+            if not (os.path.exists(p) and os.path.getsize(p) > 100):
                 open(p, "wb").write(fetch(TILE_URL.format(z=z, x=x, y=y)))
                 time.sleep(0.80)  # ~1.2 req/s，遵守 OSM 瓦片政策
             img.paste(Image.open(p).convert("RGB"), ((x - tx0) * 256, (y - ty0) * 256))

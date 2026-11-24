@@ -187,6 +187,55 @@
     .brand small{display:none}
     .factgrid{grid-template-columns:repeat(2,1fr)}
   }
+
+  /* ---- 城市徽标 ---- */
+  .citymark{width:21px;height:21px;border-radius:50%;display:inline-grid;place-items:center;flex:0 0 auto;
+    color:#fff;font-size:9px;font-weight:800;letter-spacing:-.4px;line-height:1;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 1px 2px rgba(0,0,0,.15)}
+  .citybtn b{font-size:12.5px;font-weight:700}
+  .item .citymark{width:26px;height:26px;font-size:10px;margin-right:2px}
+
+  /* ---- 定位按钮与定位点 ---- */
+  .mapctl button.locating{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+  .nearbtn{position:absolute;left:9px;bottom:34px;z-index:3;border:1px solid var(--line);border-radius:999px;
+    background:rgba(255,255,255,.94);color:var(--accent);font-size:11px;font-weight:700;padding:6px 11px;
+    box-shadow:0 2px 10px -6px rgba(0,0,0,.5);max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nearbtn[hidden]{display:none}
+
+  /* ---- 指向起点的浮动罗盘 ---- */
+  .compass-fab{position:absolute;right:10px;bottom:10px;z-index:4;width:58px;height:58px;border-radius:50%;
+    border:1px solid rgba(25,28,34,.12);background:rgba(25,28,34,.94);color:#fff;display:flex;
+    flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    box-shadow:0 8px 22px -12px rgba(0,0,0,.85);transition:transform .12s ease}
+  .compass-fab[hidden]{display:none}
+  .compass-fab:active{transform:scale(.95)}
+  .compass-fab .arw{display:grid;place-items:center;width:26px;height:26px;font-size:19px;line-height:1;
+    transform-origin:50% 50%;transition:transform .18s linear}
+  .compass-fab .dst{font-size:9.5px;font-weight:700;letter-spacing:.2px;opacity:.92;max-width:54px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* ---- 全屏指向（Find My 风格） ---- */
+  .findme{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;
+    background:radial-gradient(120% 90% at 50% 30%,#5cb860 0%,#3f9c4f 46%,#2f7d3f 100%);
+    color:#fff;padding:calc(14px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom))}
+  .findme.on{display:flex}
+  .fm-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+  .fm-kicker{font-size:11px;letter-spacing:2.4px;opacity:.82;font-weight:700}
+  .fm-name{font-size:21px;font-weight:800;letter-spacing:-.3px;margin-top:3px}
+  .fm-close{all:unset;width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);
+    display:grid;place-items:center;font-size:16px;color:#fff;flex:0 0 auto}
+  .fm-stage{flex:1;display:grid;place-items:center;min-height:0}
+  .fm-ring{position:relative;width:min(74vw,340px);aspect-ratio:1;border-radius:50%;
+    border:2px solid rgba(255,255,255,.28);display:grid;place-items:center}
+  .fm-ring::after{content:"";position:absolute;inset:14%;border-radius:50%;border:2px solid rgba(255,255,255,.14)}
+  .fm-arrow{width:min(46vw,150px);height:min(46vw,150px);transform-origin:50% 50%;transition:transform .16s linear;
+    filter:drop-shadow(0 10px 22px rgba(0,0,0,.22))}
+  .fm-dot{position:absolute;top:-7px;left:calc(50% - 7px);width:14px;height:14px;border-radius:50%;
+    background:#fff;transform-origin:50% calc(min(74vw,340px)/2 + 7px);transition:transform .3s ease}
+  .fm-bottom{padding-top:8px}
+  .fm-dist{font-size:42px;font-weight:800;letter-spacing:-1.6px;line-height:1.1;font-variant-numeric:tabular-nums}
+  .fm-sub{font-size:15px;font-weight:600;opacity:.92;margin-top:6px}
+  .fm-note{font-size:11.5px;opacity:.72;margin-top:14px;line-height:1.6;max-width:32em}
 </style>
 </head>
 <body>
@@ -210,9 +259,15 @@
       <button id="zout" aria-label="缩小">－</button>
       <button id="zfit" aria-label="复位">⤢</button>
       <button id="tileBtn" class="on" aria-label="显示或隐藏离线底图">图</button>
+      <button id="locBtn" aria-label="显示我的位置">◎</button>
     </div>
     <div class="osm-attr" id="osmAttr">© OpenStreetMap contributors · 离线底图</div>
+    <button class="nearbtn" id="nearBtn" hidden></button>
     <div class="hint" id="hint">轻点地图车站选择起点</div>
+    <button class="compass-fab" id="compassFab" hidden aria-label="指向起点">
+      <span class="arw" id="fabArrow"><svg viewBox="0 0 100 100" width="21" height="21" aria-hidden="true"><path d="M50 4 L86 96 L50 76 L14 96 Z" fill="#fff"/></svg></span>
+      <span class="dst" id="fabDist">定位</span>
+    </button>
     <div class="hoverTip" id="hoverTip"></div>
   </section>
 
@@ -284,10 +339,31 @@
   <div class="info" id="infoBody"></div>
 </div>
 
+<div class="findme" id="findme" role="dialog" aria-modal="true" aria-label="指向起点">
+  <div class="fm-top">
+    <div>
+      <div class="fm-kicker">指向</div>
+      <div class="fm-name" id="fmName">—</div>
+    </div>
+    <button class="fm-close" id="fmClose" aria-label="关闭">✕</button>
+  </div>
+  <div class="fm-stage">
+    <div class="fm-ring">
+      <div class="fm-dot" id="fmDot"></div>
+      <svg class="fm-arrow" id="fmArrow" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 4 L86 96 L50 76 L14 96 Z" fill="#fff"/></svg>
+    </div>
+  </div>
+  <div class="fm-bottom">
+    <div class="fm-dist" id="fmDist">—</div>
+    <div class="fm-sub" id="fmSub">正在获取定位…</div>
+    <div class="fm-note" id="fmNote">箭头指向你选择的起点站。手机朝向由浏览器罗盘提供，精度受设备与环境影响；未获得罗盘数据时按“北向朝上”显示。</div>
+  </div>
+</div>
+
 <script>
 "use strict";
 const DB = /*__DB__*/;
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.1.0";
 const DATA_VERSION = DB.dataVersion;
 const byId = new Map(DB.cities.map(function(c){ return [c.id,c]; }));
 const runtimeCache = new Map();
@@ -857,9 +933,11 @@ function clampTileView(c){
   if(bw<=0||bh<=0) return;
   var kMin=Math.max(view.W/bw,view.H/bh);
   if(view.k<kMin) view.k=kMin;
-  var loX=view.W-bx1*view.k, hiX=-bx0*view.k;
+  // 底图贴着城市裁切，允许小幅越界拖动（否则默认视野下地图完全拖不动），越界处露出纸色底
+  var pad=Math.max(26,0.12*Math.max(view.W,view.H));
+  var loX=view.W-bx1*view.k-pad, hiX=-bx0*view.k+pad;
   view.x=loX<=hiX?Math.min(hiX,Math.max(loX,view.x)):(loX+hiX)/2;
-  var loY=view.H-by1*view.k, hiY=-by0*view.k;
+  var loY=view.H-by1*view.k-pad, hiY=-by0*view.k+pad;
   view.y=loY<=hiY?Math.min(hiY,Math.max(loY,view.y)):(loY+hiY)/2;
 }
 function applyView(){
@@ -911,6 +989,7 @@ function applyView(){
     c.labelEls[st].setAttribute("x",String(projectCity(c).px[st]));
     c.labelEls[st].setAttribute("y",String(projectCity(c).py[st]-7/k));
   }
+  if (geoState.pos) renderMe();
 }
 function drawRoute(){
   if (!mapLayers || !state.city) return;
@@ -984,6 +1063,7 @@ function renderTrip(){
   var c=state.city;
   $("fromBtn").innerHTML='<i>起点</i><b class="'+(state.from==null?"empty":"")+'">'+(state.from==null?"选择起点站":esc(stationName(c,state.from)))+'</b>';
   $("toBtn").innerHTML='<i>终点</i><b class="'+(state.to==null?"empty":"")+'">'+(state.to==null?"选择终点站":esc(stationName(c,state.to)))+'</b>';
+  updateCompass();
 }
 function renderFacts(){
   var c=state.city, q=c.raw.quality;
@@ -995,7 +1075,7 @@ function renderFacts(){
     '</div>'+
     '<div class="factnote">首末班 '+q.timetables+' 条 · 数据日期 '+esc(c.raw.dataDate||"—")+' · 票价单位 '+esc(c.raw.currency||"CNY")+' · '+((c.raw.tiles&&c.raw.tiles.length)||c.raw.tileMosaic?'含 OSM z'+(c.raw.tileZ||10)+' 离线底图':'矢量底图（未内置 OSM 瓦片）')+'。<br>含地铁、市域铁路、轻轨、单轨/有轨电车等类型（线路标签可查看）。官方 OD 票价缺失的起终点显示“暂无票价”，不使用估算值冒充官方。</div>';
 }
-function renderCityBtn(){ $("cityBtn").innerHTML=esc(state.city.raw.name)+' <span>▾</span>'; }
+function renderCityBtn(){ $("cityBtn").innerHTML=cityMarkHTML(state.city.raw)+' <b>'+esc(state.city.raw.name)+'</b> <span>▾</span>'; }
 function setCity(id){
   var c=getCity(id); if(!c) return;
   $("mapTag").textContent=c.raw.name+" · "+c.raw.quality.lines+" 条线路";
@@ -1006,6 +1086,7 @@ function setCity(id){
   if(at){ at.style.display=hasTiles?"":"none"; if(hasTiles) at.textContent="© OpenStreetMap contributors · 离线底图 z"+(c.raw.tileZ||10); }
   if(tb){ tb.style.display=hasTiles?"":"none"; tb.classList.toggle("on",hasTiles&&state.tilesOn); }
   renderCityBtn(); renderTrip(); renderFacts(); renderResult(); buildMap(c);
+  closeFindMe(); updateCompass(); renderMe();
   setHint("轻点地图车站选择起点");
 }
 function selectStation(kind, si){
@@ -1149,7 +1230,7 @@ function renderCityList(q){
     if (query && !(c.name.toLowerCase().includes(query)||c.en.toLowerCase().includes(query)||c.py.toLowerCase().includes(query)||c.region.toLowerCase().includes(query))) continue;
     if (!query && c.region!==lastRegion){ html+='<div class="group">'+esc(c.region)+'</div>'; lastRegion=c.region; }
     var ql=c.quality;
-    html+='<div class="item" data-city="'+c.id+'"><div><div class="nm">'+esc(c.name)+' <span style="font-weight:400;color:#8a8f98;font-size:10px">'+esc(c.en)+'</span></div>'+
+    html+='<div class="item" data-city="'+c.id+'">'+cityMarkHTML(c)+'<div><div class="nm">'+esc(c.name)+' <span style="font-weight:400;color:#8a8f98;font-size:10px">'+esc(c.en)+'</span></div>'+
       '<div class="sub">'+ql.lines+' 线 · '+ql.stations+' 站 · 票价覆盖 '+Math.round(ql.fareCoverage*100)+'%</div></div>'+
       '<div class="right">'+(c.id===state.cityId?'当前':'选择')+'</div></div>';
   }
@@ -1199,7 +1280,7 @@ function renderInfo(){
     '<li>换乘步行与候车为数据值/默认值，部分城市有误差。</li>'+
     '<li>票价表中缺失的 OD 对显示“暂无票价”，不做估算。</li>'+
     '<li>未实现实时运营、临时停运、节假日特殊图。</li>'+
-    '<li>地图为本地 SVG + 内置 OSM 离线底图（多数城市 z10，澳门 z15 街道级）；放大到极限后底图为低分辨率，不会发起在线瓦片请求。</li>'+
+    '<li>地图为本地 SVG + 内置 OSM 离线底图（z10–z15，按城市范围自动选择，澳门等小城市为街道级）；放大到极限后底图为低分辨率，不会发起在线瓦片请求。</li>'+
     '</ul>'+
     '<p style="color:#9aa0a8">数据更新流程与来源清单见仓库 DATA_SOURCES.md；测试结果见 TEST_REPORT.md。</p>';
 }
@@ -1231,11 +1312,14 @@ function bind(){
   $("mask").onclick=closeSheet;
   var closers=document.querySelectorAll("[data-close]");
   for(var i=0;i<closers.length;i++) closers[i].onclick=closeSheet;
-  document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeSheet(); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape"){ closeFindMe(); closeSheet(); } });
   $("zin").onclick=function(){ zoomAt(view.W/2,view.H/2,1.45); };
   $("zout").onclick=function(){ zoomAt(view.W/2,view.H/2,1/1.45); };
   $("zfit").onclick=function(){ fitView(); };
   $("tileBtn").onclick=function(){ setTiles(!state.tilesOn); };
+  $("locBtn").onclick=toggleGeo;
+  $("compassFab").onclick=openFindMe;
+  $("fmClose").onclick=closeFindMe;
   // pointer drag/zoom
   var pointers=new Map(), drag=null, start=null, moved=0, pinch=null;
   var svg=$("map");
@@ -1288,6 +1372,219 @@ function bind(){
   svg.addEventListener("pointerleave",function(){ $("hoverTip").style.display="none"; });
   $("mapWrap").addEventListener("wheel",function(e){ e.preventDefault(); var p=localPt(e); zoomAt(p.x,p.y,Math.exp(-e.deltaY*0.0016)); },{passive:false});
   window.addEventListener("resize",function(){ if(state.city){ view.W=$("mapWrap").clientWidth||360; view.H=$("mapWrap").clientHeight||300; fitView(); } });
+}
+
+/* ---------------- 我的位置 · 指向起点 ---------------- */
+var SVGNS = "http://www.w3.org/2000/svg";
+var geoState = { on: false, watchId: null, pos: null, err: null };
+var headState = { deg: 0, abs: false, started: false, available: false };
+var fmRAF = 0;
+
+/* 城市标志色：取该城出现次数最多的线路颜色，配白色两字徽标 */
+function cityRawColor(raw){
+  var lines = (raw && raw.lines) || [], counts = {}, best = null, bn = 0;
+  for (var i=0;i<lines.length;i++){
+    var col = (lines[i]||[])[2];
+    if (!col || col.charAt(0)!="#") continue;
+    counts[col] = (counts[col]||0) + 1;
+    if (counts[col] > bn){ bn = counts[col]; best = col; }
+  }
+  return best || "#5b6068";
+}
+function cityMarkHTML(raw, cls){
+  var nm = (raw && raw.name) || "";
+  var t = nm.length <= 2 ? nm : nm.slice(0,2);
+  return '<span class="citymark '+(cls||'')+'" style="background:'+cityRawColor(raw)+'">'+esc(t)+'</span>';
+}
+
+function mercYof(lat){ return (1-Math.log(Math.tan(Math.PI/4+lat*Math.PI/360))/Math.PI)/2; }
+function geoToWorld(c, lon, lat){
+  var p = projectCity(c);
+  return [p.ox+((lon+180)/360-p.minX)*p.s, p.oy+(mercYof(lat)-p.minY)*p.s];
+}
+function distM(lat1, lon1, lat2, lon2){
+  var R=6371000, p1=lat1*Math.PI/180, p2=lat2*Math.PI/180;
+  var dp=(lat2-lat1)*Math.PI/180, dl=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(a)));
+}
+function bearingDeg(lat1, lon1, lat2, lon2){
+  var p1=lat1*Math.PI/180, p2=lat2*Math.PI/180, dl=(lon2-lon1)*Math.PI/180;
+  var y=Math.sin(dl)*Math.cos(p2), x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+  return (Math.atan2(y,x)*180/Math.PI+360)%360;
+}
+function fmtDist(m){
+  if (!isFinite(m)) return "—";
+  if (m < 1000) return (Math.round(m/10)*10)+" 米";
+  return (m/1000).toFixed(m<10000?1:0)+" 公里";
+}
+function relWord(rel){
+  var a=((rel%360)+360)%360, x=a>180?360-a:a;
+  if (x<15) return "正前方";
+  if (x<50) return a>180?"左前方":"右前方";
+  if (x<130) return a>180?"左侧":"右侧";
+  if (x<165) return a>180?"左后方":"右后方";
+  return "正后方";
+}
+function headingNow(){ return headState.available && headState.abs ? headState.deg : 0; }
+
+function meLayer(){
+  if (!mapLayers || !mapLayers.vectorWorld) return null;
+  var g = document.getElementById("gMe");
+  if (!g){ g = document.createElementNS(SVGNS,"g"); g.setAttribute("id","gMe"); mapLayers.vectorWorld.appendChild(g); }
+  return g;
+}
+function renderMe(){
+  if (!mapLayers || !state.city) return;
+  var g = meLayer(); if (!g) return;
+  g.innerHTML="";
+  if (!geoState.pos) return;
+  var c=state.city, w=geoToWorld(c, geoState.pos.lon, geoState.pos.lat), k=view.k||1;
+  var s=projectCity(c).s;
+  var worldPerMeter = s/(111320*Math.max(0.05,Math.cos(geoState.pos.lat*Math.PI/180))*360);
+  var accR = geoState.pos.acc*worldPerMeter;
+  if (isFinite(accR) && accR>0 && accR<3){
+    var ac=document.createElementNS(SVGNS,"circle");
+    ac.setAttribute("cx",w[0]); ac.setAttribute("cy",w[1]); ac.setAttribute("r",String(accR));
+    ac.setAttribute("fill","rgba(29,78,216,.14)"); ac.setAttribute("stroke","rgba(29,78,216,.32)");
+    ac.setAttribute("stroke-width",String(1/k));
+    g.appendChild(ac);
+  }
+  var halo=document.createElementNS(SVGNS,"circle");
+  halo.setAttribute("cx",w[0]); halo.setAttribute("cy",w[1]); halo.setAttribute("r",String(11/k));
+  halo.setAttribute("fill","rgba(29,78,216,.18)");
+  g.appendChild(halo);
+  var dot=document.createElementNS(SVGNS,"circle");
+  dot.setAttribute("id","meDot");
+  dot.setAttribute("cx",w[0]); dot.setAttribute("cy",w[1]); dot.setAttribute("r",String(6/k));
+  dot.setAttribute("fill","#1d4ed8"); dot.setAttribute("stroke","#fff"); dot.setAttribute("stroke-width",String(2.4/k));
+  g.appendChild(dot);
+}
+function targetStation(){
+  if (!state.city || state.from==null) return null;
+  var st=state.city.raw.stations[state.from];
+  return st ? {name:st[0], lon:st[2], lat:st[3]} : null;
+}
+function compassData(){
+  var t=targetStation(); if (!t || !geoState.pos) return null;
+  return { name:t.name, dist:distM(geoState.pos.lat, geoState.pos.lon, t.lat, t.lon),
+           bearing:bearingDeg(geoState.pos.lat, geoState.pos.lon, t.lat, t.lon) };
+}
+function updateCompass(){
+  var fab=document.getElementById("compassFab"); if (!fab) return;
+  var t=targetStation();
+  if (!t){ fab.hidden=true; return; }
+  fab.hidden=false;
+  var d=compassData(), arw=document.getElementById("fabArrow"), dst=document.getElementById("fabDist");
+  if (!d){ arw.style.transform="rotate(0deg)"; dst.textContent=geoState.on?"定位中":"定位"; return; }
+  var rel=(d.bearing-headingNow()+360)%360;
+  arw.style.transform="rotate("+rel.toFixed(1)+"deg)";
+  dst.textContent=fmtDist(d.dist);
+  if (document.getElementById("findme").classList.contains("on")) renderFindMe(d);
+}
+function renderFindMe(d){
+  if (!d) d=compassData();
+  var name=targetStation();
+  document.getElementById("fmName").textContent = name ? name.name : "—";
+  if (!d){
+    document.getElementById("fmDist").textContent="—";
+    document.getElementById("fmSub").textContent = geoState.on ? "正在获取定位…" : "需要定位权限才能计算方向";
+    return;
+  }
+  var rel=(d.bearing-headingNow()+360)%360;
+  document.getElementById("fmDist").textContent=fmtDist(d.dist);
+  document.getElementById("fmSub").textContent=relWord(rel)+(headState.abs?"":" · 北向朝上");
+  document.getElementById("fmArrow").style.transform="rotate("+rel.toFixed(1)+"deg)";
+  document.getElementById("fmDot").style.transform="rotate("+d.bearing.toFixed(1)+"deg)";
+}
+function fmTick(){
+  if (!document.getElementById("findme").classList.contains("on")){ fmRAF=0; return; }
+  renderFindMe();
+  fmRAF=requestAnimationFrame(fmTick);
+}
+function openFindMe(){
+  if (!targetStation()){ setHint("先选择起点站"); return; }
+  document.getElementById("findme").classList.add("on");
+  startHeading();
+  if (!geoState.pos && !geoState.on) startGeo();
+  renderFindMe();
+  if (!fmRAF) fmRAF=requestAnimationFrame(fmTick);
+}
+function closeFindMe(){
+  document.getElementById("findme").classList.remove("on");
+  if (fmRAF){ cancelAnimationFrame(fmRAF); fmRAF=0; }
+}
+function startHeading(){
+  if (headState.started) return;
+  if (typeof DeviceOrientationEvent==="undefined") return;
+  var go=function(){
+    headState.started=true;
+    window.addEventListener("deviceorientationabsolute", onOrient, true);
+    window.addEventListener("deviceorientation", onOrient, true);
+  };
+  try{
+    if (typeof DeviceOrientationEvent.requestPermission==="function"){
+      DeviceOrientationEvent.requestPermission().then(function(s){ if (s==="granted") go(); }).catch(function(){});
+    } else go();
+  }catch(e){}
+}
+function onOrient(e){
+  var h=null;
+  if (typeof e.webkitCompassHeading==="number" && !isNaN(e.webkitCompassHeading)){ h=e.webkitCompassHeading; headState.abs=true; }
+  else if (e.absolute && typeof e.alpha==="number"){ h=(360-e.alpha)%360; headState.abs=true; }
+  if (h==null || !isFinite(h)) return;
+  headState.deg=h; headState.available=true;
+}
+function updateLocBtn(){
+  var b=document.getElementById("locBtn");
+  if (b) b.classList.toggle("locating", !!geoState.on);
+}
+function startGeo(){
+  if (!navigator.geolocation){ setHint("此浏览器不支持定位"); return; }
+  if (geoState.on) return;
+  geoState.on=true; updateLocBtn(); setHint("正在获取定位…");
+  try{
+    geoState.watchId=navigator.geolocation.watchPosition(function(p){
+      geoState.pos={lon:p.coords.longitude, lat:p.coords.latitude, acc:p.coords.accuracy||0};
+      geoState.err=null; renderMe(); updateCompass(); checkCityRange();
+    }, function(err){
+      geoState.on=false; geoState.err=err; updateLocBtn();
+      setHint("定位失败："+(err.code===1?"未授权定位（浏览器需 HTTPS 并允许位置权限）":err.code===2?"暂时无法获取位置":"定位超时"));
+    }, {enableHighAccuracy:true, maximumAge:5000, timeout:20000});
+  }catch(e){ geoState.on=false; updateLocBtn(); setHint("无法启动定位"); }
+}
+function stopGeo(){
+  if (geoState.watchId!=null && navigator.geolocation) navigator.geolocation.clearWatch(geoState.watchId);
+  geoState.watchId=null; geoState.on=false; updateLocBtn();
+}
+function toggleGeo(){ if (geoState.on) { stopGeo(); setHint("已停止定位"); } else startGeo(); }
+function nearestCity(lon, lat){
+  var best=null, bd=Infinity;
+  for (var i=0;i<DB.cities.length;i++){
+    var c=DB.cities[i], st=c.stations, clon=0, clat=0;
+    for (var j=0;j<st.length;j++){ clon+=st[j][2]; clat+=st[j][3]; }
+    clon/=st.length; clat/=st.length;
+    var d=distM(lat, lon, clat, clon);
+    if (d<bd){ bd=d; best={id:c.id, name:c.name, dist:d}; }
+  }
+  return best;
+}
+function checkCityRange(){
+  var nb=document.getElementById("nearBtn");
+  if (!nb || !geoState.pos || !state.city) return;
+  var me=nearestCity(geoState.pos.lon, geoState.pos.lat);
+  var sameCity = me && me.id===state.cityId;
+  if (sameCity || !me){ nb.hidden=true; setHint("已定位 · 精度约 "+Math.round(geoState.pos.acc)+" 米"); return; }
+  var here=nearestCity(geoState.pos.lon, geoState.pos.lat);
+  var c=state.city, st=c.raw.stations, s=0;
+  // 距离当前城市最近车站
+  var dmin=Infinity;
+  for (var i=0;i<st.length;i++){ var d=distM(geoState.pos.lat,geoState.pos.lon,st[i][3],st[i][2]); if(d<dmin) dmin=d; }
+  var g=document.getElementById("gMe"); if (g) g.innerHTML="";
+  nb.hidden=false;
+  nb.textContent="你距"+esc(c.raw.name)+"约 "+fmtDist(dmin)+" · 切到"+esc(here.name);
+  nb.onclick=function(){ setCity(here.id); nb.hidden=true; renderMe(); };
+  setHint("你不在当前城市范围内");
 }
 
 function init(){

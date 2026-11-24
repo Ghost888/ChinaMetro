@@ -6,3 +6,4 @@ test_webkit.json
 data_quality.json
 *.zip
 __pycache__/
+.tile-cache/
