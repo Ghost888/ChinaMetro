@@ -764,15 +764,15 @@ function buildMap(c){
   world.setAttribute("id","world");
   var gTiles=document.createElementNS("http://www.w3.org/2000/svg","g"); gTiles.setAttribute("id","gTiles");
   var tilesWorld=document.createElementNS("http://www.w3.org/2000/svg","g"); tilesWorld.appendChild(gTiles);
-  var gScreen=document.createElementNS("http://www.w3.org/2000/svg","g"); gScreen.setAttribute("id","gScreenLines");
   var vectorWorld=document.createElementNS("http://www.w3.org/2000/svg","g");
+  var gLines=document.createElementNS("http://www.w3.org/2000/svg","g"); gLines.setAttribute("id","gLines");
   var gRoute=document.createElementNS("http://www.w3.org/2000/svg","g"); gRoute.setAttribute("id","gRoute");
   var gSt=document.createElementNS("http://www.w3.org/2000/svg","g");
   var gLab=document.createElementNS("http://www.w3.org/2000/svg","g"); gLab.setAttribute("id","gLabels");
-  vectorWorld.appendChild(gRoute); vectorWorld.appendChild(gSt); vectorWorld.appendChild(gLab);
-  world.appendChild(tilesWorld); world.appendChild(gScreen); world.appendChild(vectorWorld);
+  vectorWorld.appendChild(gLines); vectorWorld.appendChild(gRoute); vectorWorld.appendChild(gSt); vectorWorld.appendChild(gLab);
+  world.appendChild(tilesWorld); world.appendChild(vectorWorld);
   svg.innerHTML=""; svg.appendChild(world);
-  mapWorld=world; mapLayers={tiles:gTiles,tilesWorld:tilesWorld,vectorWorld:vectorWorld,lines:gScreen,route:gRoute,stations:gSt,labels:gLab};
+  mapWorld=world; mapLayers={tiles:gTiles,tilesWorld:tilesWorld,vectorWorld:vectorWorld,lines:gLines,route:gRoute,stations:gSt,labels:gLab};
   addTiles(c,proj,gTiles);
   // line segments grouped per line; drawn in screen coordinates on every view change
   var seen=new Set(), lineSegs={};
@@ -783,12 +783,19 @@ function buildMap(c){
     if(!lineSegs[li]) lineSegs[li]=[];
     lineSegs[li].push([c.stopStation[a],c.stopStation[b]]);
   }
-  c.screenLineEls=[];
+  // 线路按世界坐标落盘到 vectorWorld：拖动/缩放时只改一次 transform，不再逐帧重算屏幕坐标
+  c.lineEls=[];
   Object.keys(lineSegs).forEach(function(k){
-    var li=Number(k), path=document.createElementNS("http://www.w3.org/2000/svg","path");
+    var li=Number(k), segs=lineSegs[k], d="";
+    for(var q=0;q<segs.length;q++){
+      var a=segs[q][0], b=segs[q][1];
+      d += "M"+proj.px[a].toFixed(5)+" "+proj.py[a].toFixed(5)+"L"+proj.px[b].toFixed(5)+" "+proj.py[b].toFixed(5);
+    }
+    var path=document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d",d);
     path.setAttribute("fill","none"); path.setAttribute("stroke",lineColor(c,li));
     path.setAttribute("stroke-width","4"); path.setAttribute("stroke-linecap","round"); path.setAttribute("stroke-linejoin","round");
-    gScreen.appendChild(path); c.screenLineEls.push({el:path,segs:lineSegs[k]});
+    gLines.appendChild(path); c.lineEls.push(path);
   });
   // stations
   var inter=new Set();
@@ -860,20 +867,7 @@ function applyView(){
   setTransformOnly();
   if (!state.city || !mapLayers) return;
   var c=state.city, k=view.k, base=view.baseK||k, zoom=k/base;
-  if(c.screenLineEls){
-    var pp=projectCity(c);
-    for(var le=0;le<c.screenLineEls.length;le++){
-      var it=c.screenLineEls[le], d="";
-      for(var si=0;si<it.segs.length;si++){
-        var aa=it.segs[si][0], bb=it.segs[si][1];
-        var ax=view.x+pp.px[aa]*k, ay=view.y+pp.py[aa]*k;
-        var bx=view.x+pp.px[bb]*k, by=view.y+pp.py[bb]*k;
-        d += "M"+ax.toFixed(2)+" "+ay.toFixed(2)+"L"+bx.toFixed(2)+" "+by.toFixed(2);
-      }
-      it.el.setAttribute("d",d);
-      it.el.setAttribute("stroke-width","4");
-    }
-  }
+  if(c.lineEls) for(var le=0;le<c.lineEls.length;le++) c.lineEls[le].setAttribute("stroke-width",String(4/k));
   if(state.routeEls) for(var re=0;re<state.routeEls.length;re++) state.routeEls[re].el.setAttribute("stroke-width",String(state.routeEls[re].base/k));
   var rN = (zoom>=1.6 || c.raw.stations.length<=90) ? 2.2/k : 0;
   var rI = zoom>=1.6 ? 3.0/k : 2.6/k;
@@ -1205,7 +1199,7 @@ function renderInfo(){
     '<li>换乘步行与候车为数据值/默认值，部分城市有误差。</li>'+
     '<li>票价表中缺失的 OD 对显示“暂无票价”，不做估算。</li>'+
     '<li>未实现实时运营、临时停运、节假日特殊图。</li>'+
-    '<li>地图为本地 SVG + 内置 OSM z10 离线底图；放大后底图为低分辨率，不会发起在线瓦片请求。</li>'+
+    '<li>地图为本地 SVG + 内置 OSM 离线底图（多数城市 z10，澳门 z15 街道级）；放大到极限后底图为低分辨率，不会发起在线瓦片请求。</li>'+
     '</ul>'+
     '<p style="color:#9aa0a8">数据更新流程与来源清单见仓库 DATA_SOURCES.md；测试结果见 TEST_REPORT.md。</p>';
 }
