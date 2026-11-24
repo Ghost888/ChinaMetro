@@ -14,11 +14,13 @@
 
 `ChinaMetro.html` 把页面、CSS、JavaScript、全国城市线路、站点、票价、首末班时刻和路线算法全部内置。双击即可打开，不依赖网络、CDN、外部 JSON、后端服务或任何安装步骤。
 
-![桌面端](assets/screenshot-desktop.png)
+| 桌面端 | 移动端（半屏面板） |
+|---|---|
+| ![桌面端](assets/screenshot-desktop.png) | ![移动端](assets/screenshot-panel.png) |
 
 ## 核心特性
 
-- **真正单文件**：`ChinaMetro.html` 约 22.7 MB，包含 37 个城市/地区、339 条线路、6,464 个车站、7,572 个 Stop、14,789 条首末班记录，以及 37 张 OSM 离线底图（1,271 张瓦片，按城市范围取 z10–z15）。
+- **真正单文件**：`ChinaMetro.html` 约 23.1 MB，包含 37 个城市/地区、339 条线路、6,464 个车站、7,572 个 Stop、14,789 条首末班记录、37 个城市官方标识，以及 37 张 OSM 离线底图（1,271 张瓦片，按城市范围取 z10–z15）。
 - **完全离线**：没有任何 `fetch`、`XMLHttpRequest`、WebSocket、外部脚本/样式/字体/图片；直接 `file://` 打开可用。上海 OSM 瓦片也已内嵌。
 - **城市切换**：内置城市搜索、拼音/英文搜索、热门城市列表。
 - **路线规划**：最快、少换乘、少站、少步行、最低票价、综合推荐六种偏好。
@@ -36,13 +38,25 @@
 - **城市官方标识**：城市按钮与城市列表左侧显示各城市地铁系统的官方 logo（37 城全部内嵌，离线可用）。
 - **指向起点**：选定起点后地图右下角出现罗盘按钮（实时距离 + 指针）；点开是全屏指向界面——绿色渐变、大箭头、距离与「右前方」等方位文案，有设备罗盘时按朝向旋转，没有则按北向朝上。
 - **移动优先**：手机竖屏、横屏、平板和桌面布局；无外部字体、图标依赖。
-- **界面按 Apple HIG 重构**：语义化颜色/字号/间距令牌、inset-grouped 卡片、底部半模态面板（抓手 + 标题栏）、44 pt 以上触控目标、`prefers-reduced-motion` 与 `prefers-contrast` 适配。
+- **三段式底部面板**：收起（96 px）/ 半屏 / 展开三档吸附，拖动抓手切换；地图可视区随面板实时调整并重新贴合城市，保证地图始终有合理面积。
+- **结果卡先结论后细节**：顶部摘要给出总耗时、预计到达、票价、换乘次数、站数；方案卡片带「推荐」标识；每段显示线路、方向、上/下车站、站数与首末班，步行换乘以虚线轨单独区分。
+- **地图降噪**：选中路线时其余线路降透明度到 38%，起点/终点/换乘站统一视觉规范；底图瓦片保持低对比度，路线与站名优先。
+- **界面按 Apple HIG 重构**：语义化颜色/字号/间距/圆角令牌、inset-grouped 卡片、半模态面板、44 pt 以上触控目标、分段控件、加载反馈、`prefers-reduced-motion` 与 `prefers-contrast` 适配。
 - **深色模式**：跟随系统外观，卡片/面板/文字自动适配，离线底图反相降饱和后仍可辨读。
 - **可嵌入**：不读取父页面变量、不修改父页面样式；可在 iframe / WebView 中运行。
 
-![移动端](assets/screenshot-mobile.png)
+深色模式（跟随系统外观）：
+
+![深色模式](assets/screenshot-dark.png)
 
 各模块显示测试的 14 张截图在 `display/`，逐项说明见 [DISPLAY_TESTS.md](DISPLAY_TESTS.md)。
+
+## 界面结构
+
+- **地图层**：全屏离线底图 + 线路/站点/路线叠层。选中路线时其余线路降到 38% 透明度；起点、终点、换乘站分别用统一的大圆点、白底描边小圆点表示；拖动/缩放/定位/底图开关完整保留。
+- **底部面板（移动端）**：三档吸附——收起（96 px，只有抓手）/ 半屏 / 展开。拖动抓手切换，点击抓手在收起与半屏之间切换；面板高度变化时地图重新贴合当前城市。
+- **结果卡**：摘要（耗时、到达时间、票价、换乘、站数）→ 方案卡片（横向滚动，首个可行方案标「推荐」）→ 分段详情（线路、方向、上/下车站、站数、首末班）→ 估算与数据来源说明。
+- **控件**：六种路线偏好为可横向滚动的分段控件；主操作为深色填充按钮，规划时显示加载态；所有主要控件触控区 ≥ 44 pt。
 
 ## 快速开始
 
@@ -50,7 +64,7 @@
 2. 双击用 Chrome / Edge / Safari 打开。
 3. 选择城市、起点、终点，点击“规划路线”。
 
-如需发布到 GitHub Pages：仓库已包含 `.github/workflows/pages.yml`，在 Settings → Pages 选择 GitHub Actions，推送 `main` 后自动部署；根目录 `index.html` 会跳转到 `ChinaMetro.html`。
+发布到 GitHub Pages：仓库已在 Settings → Pages 中选择从 `main` 分支根目录发布；推送后自动更新，根目录 `index.html` 会跳转到 `ChinaMetro.html`。
 
 无需服务器。若浏览器限制 `file://` 的某些能力，可选用本地静态服务器（可选，不是运行前提）：
 
@@ -123,16 +137,24 @@ python3 -m http.server 8000
 china-metro-offline/
 ├── ChinaMetro.html          # 最终单文件程序（唯一运行必需文件）
 ├── index.html               # GitHub Pages 入口（跳转到 ChinaMetro.html）
-├── china_db.json            # 可编辑的全国数据源（构建输入）
-├── app_template.html        # 应用模板（含 UI/算法）
+├── china_db_base.json       # 原始数据快照（若干工具的输入）
+├── china_db.json            # 构建用全国数据源（含底图与坐标；体积大，未入库，按需生成）
+├── app_template.html        # 应用模板（含 UI/样式/算法/内嵌标识与底图占位）
 ├── tools/
 │   ├── build.py             # 将 china_db.json 注入模板，生成 ChinaMetro.html
 │   ├── validate.py          # 数据完整性校验
+│   ├── upgrade_tiles.py     # 按城市跨度抓取/拼接 OSM 底图（z10–z15）
+│   ├── fix_coord_datum.py   # 车站坐标 GCJ-02 → WGS-84
+│   ├── embed_logos.py       # 把 assets/logos/ 下的官方标识内嵌进模板
+│   ├── attach_city_tiles.py # 只给单个城市补更高 zoom 的底图
 │   └── test_app.mjs         # Playwright 自动化测试
-├── assets/                  # README 截图
+├── assets/
+│   ├── logos/               # 37 城官方标识（PNG + 来源清单 index.json）
+│   └── screenshot-*.png     # README 截图
 ├── DATA_SOURCES.md
 ├── TEST_REPORT.md
 ├── CHANGELOG.md
+├── NOTICE.md
 ├── AUDIT.md
 └── README.md
 ```
@@ -140,14 +162,22 @@ china-metro-offline/
 ## 构建与测试
 
 ```bash
-# 生成 ChinaMetro.html
+# 1) 生成 ChinaMetro.html（把数据库注入模板）
 python3 tools/build.py
 
-# 结构校验：城市/线路/站点/区间/换乘/时刻/票价/连通性
+# 2) 结构校验：城市/线路/站点/区间/换乘/时刻/票价/连通性
 python3 tools/validate.py
 
-# 自动化测试（需要开发环境中的 Playwright；运行时不依赖）
+# 3) 自动化测试（需要开发环境中的 Playwright；运行时不依赖）
 node tools/test_app.mjs
+```
+
+可选的维护脚本（都在 `tools/` 下，非运行必需）：
+
+```bash
+python3 tools/fix_coord_datum.py               # 车站坐标 GCJ-02 → WGS-84（幂等）
+python3 tools/upgrade_tiles.py --max-mp 4      # 重新抓取/拼接 37 城离线底图
+python3 tools/embed_logos.py                   # 重新内嵌 assets/logos/ 下的城市标识
 ```
 
 测试通过后会生成 `test_results.json`，并更新/参照 `TEST_REPORT.md`。
@@ -162,16 +192,19 @@ node tools/test_app.mjs
 - 地图：底图 zoom 按城市范围自动选择（大城市 z11–z12，小城市 z13，澳门 z15），城市越大放大后越容易发虚；放大到极限后仍会模糊，未接入在线瓦片。可用 `tools/upgrade_tiles.py --max-mp 8` 再提高单城面积预算，代价是单文件更大。
 - 线路图层与底图、站点同处一个世界坐标组，拖动/缩放只改一次 `transform`，线宽按 `1/k` 补偿：既不会出现放大时线路消失，也不会出现拖动时线路不跟随。
 - 车站坐标已从 GCJ-02 转为 WGS-84（`tools/fix_coord_datum.py`），与 OSM 底图对齐；转换前的偏移在城市尺度约 300–700 m。
+- 移动端面板切换档位时地图会重新贴合当前城市（不是保持原缩放）；拖动或缩放后切换档位会回到适配视野。
 - 香港/澳门票价单位分别为 HKD / MOP；部分 OD 票价缺失显示“暂无票价”。
 
 ## 数据来源与许可
 
 - 城市拓扑、时刻、票价来自 **Open Metro** 中国城市数据集（`Naptie/openmetro`），其上游来源包括各城市地铁运营方、官方路径规划器、开放交通数据等。
 - 本项目的应用代码采用 MIT；Open Metro 代码/数据及其上游数据的授权请见 `DATA_SOURCES.md` 与 `NOTICE` 说明。
+- 离线底图 © OpenStreetMap contributors，ODbL 1.0；来源为 OSM 德国镜像与法国镜像，构建后按城市拼成单张图内嵌。
+- 37 个城市官方标识来自 Wikimedia Commons 与中英文维基百科（公有领域 / CC BY / CC BY-SA / fair use），逐条来源见 `assets/logos/index.json`；标识为各运营方注册商标，仅作指称性使用。
 - 本项目为非官方工具，与各城市地铁运营方无隶属关系。实际票价、运营时刻、临时调整以官方公告为准。
 
 ## 版本
 
-- 软件版本：`1.0.0`
+- 软件版本：`1.5.0`
 - 数据版本：`2026.11.23`
 - 数据日期：各城市卡片显示（多数为 2026-09 至 2026-10）
