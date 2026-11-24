@@ -1,0 +1,225 @@
+{
+ "cn-beijing": {
+  "file": "Beijing Subway simplified logo.svg",
+  "site": "commons",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Beijing_Subway_simplified_logo.svg",
+  "bytes": 11584
+ },
+ "cn-shanghai": {
+  "file": "Shanghai Metro logo.svg",
+  "site": "commons",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Shanghai_Metro_logo.svg",
+  "bytes": 11875
+ },
+ "cn-tianjin": {
+  "file": "TianjinMetro.svg",
+  "site": "commons",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:TianjinMetro.svg",
+  "bytes": 7015
+ },
+ "cn-chongqing": {
+  "file": "Chongqing Rail Transit logo.svg",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Chongqing_Rail_Transit_logo.svg",
+  "bytes": 7289
+ },
+ "cn-guangzhou": {
+  "file": "Guangzhou Metro logo.svg",
+  "site": "commons",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Guangzhou_Metro_logo.svg",
+  "bytes": 6301
+ },
+ "cn-shenzhen": {
+  "file": "Shenzhen Metro logo.svg",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Shenzhen_Metro_logo.svg",
+  "bytes": 8217
+ },
+ "cn-chengdu": {
+  "file": "Chengdu Rail Transit icon.svg",
+  "site": "commons",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Chengdu_Rail_Transit_icon.svg",
+  "bytes": 5457
+ },
+ "cn-xian": {
+  "file": "Xi'an Metro Logo.png",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Xi%27an_Metro_Logo.png",
+  "bytes": 5205
+ },
+ "cn-nanjing": {
+  "file": "Nanjing Metro Logo.svg",
+  "site": "commons",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Nanjing_Metro_Logo.svg",
+  "bytes": 12324
+ },
+ "cn-hangzhou": {
+  "file": "Hangzhou Metro Logo.png",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Hangzhou_Metro_Logo.png",
+  "bytes": 11764
+ },
+ "cn-suzhou": {
+  "file": "Suzhou Metro logo.svg",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Suzhou_Metro_logo.svg",
+  "bytes": 9527
+ },
+ "cn-zhengzhou": {
+  "file": "Zhengzhou Metro Logo (no text).png",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Zhengzhou_Metro_Logo_(no_text).png",
+  "bytes": 8424
+ },
+ "cn-changsha": {
+  "file": "Changsha Metro logo.svg",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Changsha_Metro_logo.svg",
+  "bytes": 13420
+ },
+ "cn-hefei": {
+  "file": "Hefei Metro Logo.png",
+  "site": "zh",
+  "license": "PD",
+  "page": "https://zh.wikipedia.org/wiki/File:Hefei_Metro_Logo.png",
+  "bytes": 28731
+ },
+ "cn-qingdao": {
+  "file": "Qingdao Metro logo - bw.svg",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Qingdao_Metro_logo_-_bw.svg",
+  "bytes": 12063
+ },
+ "cn-shenyang": {
+  "file": "Shenyang Metro Logo.png",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Shenyang_Metro_Logo.png",
+  "bytes": 12526
+ },
+ "cn-changchun": {
+  "file": "Changchun Railway Traffic logo.svg",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Changchun_Railway_Traffic_logo.svg",
+  "bytes": 11578
+ },
+ "cn-harbin": {
+  "file": "Harbin Metro logo with text.png",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Harbin_Metro_logo_with_text.png",
+  "bytes": 11415
+ },
+ "cn-nanchang": {
+  "file": "Nanchang Metro Logo Horizontal.png",
+  "site": "commons",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Nanchang_Metro_Logo_Horizontal.png",
+  "bytes": 14535
+ },
+ "cn-fuzhou": {
+  "file": "Fuzhou Metro logo.png",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Fuzhou_Metro_logo.png",
+  "bytes": 9509
+ },
+ "cn-xiamen": {
+  "file": "Amoy Metro logo.svg",
+  "site": "commons",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Amoy_Metro_logo.svg",
+  "bytes": 7851
+ },
+ "cn-nanning": {
+  "file": "Nanning Rail Transit Logo.png",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Nanning_Rail_Transit_Logo.png",
+  "bytes": 25301
+ },
+ "cn-shijiazhuang": {
+  "file": "Shijiazhuang Metro.svg",
+  "site": "commons",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Shijiazhuang_Metro.svg",
+  "bytes": 4003
+ },
+ "cn-taiyuan": {
+  "file": "Taiyuan metro logo.png",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Taiyuan_metro_logo.png",
+  "bytes": 9237
+ },
+ "cn-jinan": {
+  "file": "JinanMetro Logo.svg",
+  "site": "commons",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:JinanMetro_Logo.svg",
+  "bytes": 10861
+ },
+ "cn-wuxi": {
+  "file": "Wuxi Metro Logo.png",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Wuxi_Metro_Logo.png",
+  "bytes": 13880
+ },
+ "cn-ningbo": {
+  "file": "Ningbo Rail Transit logo.svg",
+  "site": "commons",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Ningbo_Rail_Transit_logo.svg",
+  "bytes": 21859
+ },
+ "cn-xuzhou": {
+  "file": "Xuzhou Metro New Logo with char.svg",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Xuzhou_Metro_New_Logo_with_char.svg",
+  "bytes": 16726
+ },
+ "cn-urumqi": {
+  "file": "URUMQI METRO LOGO.png",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:URUMQI_METRO_LOGO.png",
+  "bytes": 22328
+ },
+ "cn-hohhot": {
+  "file": "Hohhot Metro Logo v1.png",
+  "site": "zh",
+  "license": "合理使用",
+  "page": "https://zh.wikipedia.org/wiki/File:Hohhot_Metro_Logo_v1.png",
+  "bytes": 13322
+ },
+ "cn-hongkong": {
+  "file": "MTR LOGO - New.png",
+  "site": "commons",
+  "license": "CC BY 3.0",
+  "bytes": 26255
+ },
+ "cn-macau": {
+  "file": "Metro Ligeiro de Macau logo.svg",
+  "site": "commons",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Metro_Ligeiro_de_Macau_logo.svg",
+  "bytes": 8601
+ }
+}
